@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "1074131544847",
+    "firebase_url": "https://tagtoyota-aece3-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "tagtoyota-aece3",
+    "storage_bucket": "tagtoyota-aece3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1074131544847:android:1f93da1dd8aa1bf4ce2c7a",
+        "android_client_info": {
+          "package_name": "com.example.tagtoyota"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCEz8Sc2Be--zIpTwby1I2YmotPpawyMH4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
