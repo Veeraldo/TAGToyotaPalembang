@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:tagtoyota/screen/profile_screen.dart';
@@ -12,35 +14,54 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
 
-  final List<IconData> _icons = [
-    Icons.home,
-    Icons.search,
-    Icons.person,
-  ];
-
-  final List<String> _labels = [
-    "Home",
-    "Search",
-    "Profile",
-  ];
-
-  late final List<Widget> _screens;
+  late String greeting;
 
   @override
   void initState() {
     super.initState();
-    _screens = [
-      const HomeContent(),
-      const SearchScreen(),
-      const ProfileScreen(),
-    ];
+    _updateGreeting();
+  }
+
+  void _updateGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 12) {
+      greeting = "Selamat pagi";
+    } else if (hour >= 12 && hour < 15) {
+      greeting = "Selamat siang";
+    } else if (hour >= 15 && hour < 18) {
+      greeting = "Selamat sore";
+    } else {
+      greeting = "Selamat malam";
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final username = user?.displayName ?? "User";
+
+    final List<IconData> _icons = [
+      Icons.home,
+      Icons.search,
+      Icons.person,
+    ];
+
+    final List<String> _labels = [
+      "Home",
+      "Search",
+      "Profile",
+    ];
+
+    final List<Widget> _screens = [
+      _buildHomeContent(username),
+      const SearchScreen(),
+      const ProfileScreen(),
+    ];
+
     return Scaffold(
-      // AppBar custom
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(50),
         child: Container(
@@ -75,7 +96,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
       body: _screens[_currentIndex],
 
-      // Bottom Navbar
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -160,26 +180,23 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-}
 
-
-class HomeContent extends StatefulWidget {
-  const HomeContent({super.key});
-
-  @override
-  State<HomeContent> createState() => _HomeContentState();
-}
-
-class _HomeContentState extends State<HomeContent> {
-  DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildHomeContent(String name) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
+          SizedBox(
+            child: Text(
+              "$greeting, $name",
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 2),
           TableCalendar(
             locale: 'en_US',
             firstDay: DateTime.utc(2000, 1, 1),

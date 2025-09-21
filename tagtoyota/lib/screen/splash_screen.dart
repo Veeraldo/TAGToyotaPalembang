@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-
-import 'package:tagtoyota/screen/home_screen.dart';
+import 'package:tagtoyota/screen/signin_screen.dart';
+import 'package:tagtoyota/screen/Wrapper.dart';
+import 'package:tagtoyota/screen/signup_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,7 +14,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Splash Screen Demo',
       debugShowCheckedModeBanner: false,
       home: const SplashScreen(),
     );
@@ -36,7 +36,7 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
 
-    // Animasi loading bar 3 detik
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
@@ -47,15 +47,14 @@ class _SplashScreenState extends State<SplashScreen>
       curve: Curves.linear,
     ));
 
-    // Jalankan animasi sekali
     _controller.forward();
 
-    // Pindah ke halaman berikutnya setelah selesai animasi
+    // Pindah screen
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          MaterialPageRoute(builder: (context) => Wrapper()),
         );
       }
     });
@@ -99,7 +98,7 @@ class _SplashScreenState extends State<SplashScreen>
                       widthFactor: _animation.value,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFE0000), // merah
+                          color: const Color(0xFFFE0000), 
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),

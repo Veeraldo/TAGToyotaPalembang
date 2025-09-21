@@ -24,7 +24,7 @@ class MainApp extends StatelessWidget {
      final themeProvider = Provider.of<ThemeProvider>(context);
       return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'TAG Toyota',
+
       theme: themeProvider.theme,
       home: SplashScreen(),
     );
