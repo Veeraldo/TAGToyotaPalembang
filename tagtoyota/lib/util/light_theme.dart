@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 const Color primaryColor = Color(0xFFFBF9FA); // Putih
-const Color secondaryColor = Color(0xFFA80038); // Merah
+const Color secondaryColor = Color.fromARGB(255, 255, 0, 0); // Merah
 const Color accentColor = Color(0xFF2B2024); // Hitam
 
 final ThemeData lightTheme = ThemeData(
@@ -18,7 +18,7 @@ final ThemeData lightTheme = ThemeData(
     onTertiary: primaryColor,
     onSurface: accentColor, 
     onBackground: accentColor,
-    error: const Color(0xffd32f2f),
+    error: const Color.fromARGB(255, 255, 0, 0),
     onError: primaryColor,
   ),
   scaffoldBackgroundColor: primaryColor,

@@ -46,6 +46,8 @@ class _SignInScreenState extends State<SignInScreen> {
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () async {
+                    FocusScope.of(context).unfocus();
+                    await Future.delayed(const Duration(milliseconds: 200));
                     try {
                       await FirebaseAuth.instance.signInWithEmailAndPassword(
                         email: emailCtrl.text.trim(),
@@ -57,7 +59,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       );
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Login error: $e")),
+                        SnackBar(content: Text("Coba lagi")),
                       );
                     }
                   },
