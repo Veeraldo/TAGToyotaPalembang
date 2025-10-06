@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tagtoyota/screen/signin_screen.dart';
 import 'setting_screen.dart';
+import 'package:image/image.dart' as img;
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -41,7 +42,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  /// 🔹 Pilih & simpan gambar sebagai Base64 ke Firestore
+  /// Pilih gambar, compress, convert ke Base64, dan simpan ke Firestore
   Future<void> _pickAndSaveImage() async {
     try {
       final pickedFile =
@@ -51,9 +52,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final file = File(pickedFile.path);
       setState(() => _imageFile = file);
 
-      // Konversi gambar ke Base64
+      // Baca bytes
       final bytes = await file.readAsBytes();
-      final base64Image = base64Encode(bytes);
+
+      // Decode image
+      img.Image? image = img.decodeImage(bytes);
+      if (image == null) return;
+
+      // Resize agar tidak terlalu besar (max width 800px)
+      img.Image resized = img.copyResize(image, width: 800);
+
+      // Encode ke JPG dengan quality 85
+      final resizedBytes = img.encodeJpg(resized, quality: 85);
+
+      // Convert ke Base64
+      final base64Image = base64Encode(resizedBytes);
 
       // Simpan ke Firestore
       await FirebaseFirestore.instance
@@ -67,7 +80,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Foto profil berhasil diperbarui!',selectionColor: Colors.green,)),
+        const SnackBar(content: Text('Foto profil berhasil diperbarui!')),
       );
     } catch (e) {
       debugPrint("Error: $e");
@@ -77,16 +90,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-
-      Future<void> _logout() async {
-        await FirebaseAuth.instance.signOut();
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => SignInScreen()),
-        );
-      }
-
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => SignInScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -130,18 +141,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
-
             const SizedBox(height: 16),
-
             Text(
               username,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(email, style: const TextStyle(color: Colors.grey)),
-
             const SizedBox(height: 30),
-
             _buildMenuItem(Icons.settings, "Pengaturan", () {
               Navigator.push(
                 context,
@@ -149,9 +156,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             }),
             _buildMenuItem(Icons.people, "Isi Data Customer", () {}),
-
             const SizedBox(height: 40),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30.0),
               child: ElevatedButton.icon(
@@ -168,7 +173,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
           ],
         ),
