@@ -90,4 +90,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'tagtoyota-aece3.firebasestorage.app',
     measurementId: 'G-66TNE82CFB',
   );
+
 }

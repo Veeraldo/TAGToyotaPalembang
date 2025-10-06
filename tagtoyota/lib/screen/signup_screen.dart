@@ -110,6 +110,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       );
                     }
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 255, 17, 0), 
+                    foregroundColor: Colors.white, 
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
+                  ),
                   child: const Text("Sign Up"),
                 ),
                 const SizedBox(height: 20),
@@ -128,7 +141,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       child: const Text(
                         "Sign In",
                         style: TextStyle(
-                          color: Colors.red,
+                          color: Color.fromARGB(255, 255, 17, 0),
                           fontWeight: FontWeight.bold,
                         ),
                       ),

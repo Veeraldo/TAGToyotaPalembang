@@ -4,9 +4,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:tagtoyota/screen/profile_screen.dart';
 import 'package:tagtoyota/screen/search_screen.dart';
+import 'package:tagtoyota/util/theme_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,7 +28,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _updateGreeting();
 
-    // 🔹 Tampilkan popup motivasi setelah 1 detik
     Future.delayed(const Duration(seconds: 1), () {
       _showPopup();
     });
@@ -45,7 +46,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
- 
   Future<String> fetchAPI() async {
     try {
       final response = await http.get(Uri.parse('https://zenquotes.io/api/random'));
@@ -60,7 +60,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-
   Future<void> _showPopup() async {
     final user = FirebaseAuth.instance.currentUser;
     final username = user?.displayName ?? "User";
@@ -71,6 +70,8 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor:
+            Theme.of(context).scaffoldBackgroundColor.withOpacity(0.9),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -92,11 +93,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final username = user?.displayName ?? "User";
+    final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
 
     final List<IconData> _icons = [
       Icons.home,
@@ -129,11 +130,12 @@ class _HomeScreenState extends State<HomeScreen> {
         GlobalCupertinoLocalizations.delegate,
       ],
       home: Scaffold(
+        backgroundColor: isDarkMode ? Colors.black : Colors.white,
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(50),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDarkMode ? Colors.grey[900] : Colors.white,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black26,
@@ -160,12 +162,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-
         body: SafeArea(child: _screens[_currentIndex]),
-
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDarkMode ? Colors.grey[900] : Colors.white,
             boxShadow: [
               BoxShadow(
                 color: Colors.black26,
@@ -193,8 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeOut,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? Colors.red.withOpacity(0.1)
@@ -217,8 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 4),
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 300),
-                          transitionBuilder: (child, animation) =>
-                              FadeTransition(
+                          transitionBuilder: (child, animation) => FadeTransition(
                             opacity: animation,
                             child: SizeTransition(
                               sizeFactor: animation,
@@ -230,8 +228,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               ? Text(
                                   _labels[index],
                                   key: ValueKey(index),
-                                  style: const TextStyle(
-                                    color: Color(0xFFFE0000),
+                                  style: TextStyle(
+                                    color: isDarkMode
+                                        ? Colors.red[300]
+                                        : const Color(0xFFFE0000),
                                     fontWeight: FontWeight.bold,
                                     fontSize: 12,
                                   ),
@@ -251,6 +251,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHomeContent(String name) {
+    final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -258,15 +260,16 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Text(
               "$greeting, $name",
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
+                color: isDarkMode ? Colors.white : Colors.black,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             TableCalendar(
-              locale: 'id_ID', // 🔹 Bahasa Indonesia
+              locale: 'id_ID',
               availableCalendarFormats: const {
                 CalendarFormat.month: 'Bulan',
                 CalendarFormat.twoWeeks: '2 Minggu',
@@ -284,7 +287,7 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               headerStyle: const HeaderStyle(
                 titleCentered: true,
-                formatButtonVisible: false, 
+                formatButtonVisible: false,
                 leftChevronIcon: Icon(Icons.chevron_left, color: Colors.red),
                 rightChevronIcon: Icon(Icons.chevron_right, color: Colors.red),
                 titleTextStyle: TextStyle(
@@ -292,16 +295,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              calendarStyle: const CalendarStyle(
+              calendarStyle: CalendarStyle(
                 todayDecoration: BoxDecoration(
-                  color: Colors.black,
+                  color: isDarkMode ? Colors.white : Colors.black,
                   shape: BoxShape.circle,
                 ),
-                selectedDecoration: BoxDecoration(
+                selectedDecoration: const BoxDecoration(
                   color: Colors.red,
                   shape: BoxShape.circle,
                 ),
-                weekendTextStyle: TextStyle(color: Colors.red),
+                weekendTextStyle: const TextStyle(color: Colors.red),
+                defaultTextStyle: TextStyle(
+                  color: isDarkMode ? Colors.white : Colors.black,
+                ),
+                outsideTextStyle: TextStyle(
+                  color: isDarkMode ? Colors.white54 : Colors.black54,
+                ),
               ),
             ),
           ],

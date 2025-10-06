@@ -35,7 +35,6 @@ flutter:
     - assets/splashscreen.png
     - assets/TAGNyamping.png
     - assets/Icon.png
-    - assets/profile_pic.png
 
 flutter_icons:
   android: true

@@ -1,29 +1,38 @@
 import 'package:flutter/material.dart';
 
-const Color primaryColor = Color.fromARGB(255, 0, 0, 0); // Hitam
-const Color secondaryColor = Color.fromARGB(255, 255, 0, 0); // Merah
-const Color accentColor = Color(0xFFFBF9FA); // Putih
-
 final ThemeData darkTheme = ThemeData(
   brightness: Brightness.dark,
-  scaffoldBackgroundColor: primaryColor,
-  colorScheme: ColorScheme.dark(
-    primary: secondaryColor,
-    secondary: accentColor,
-    surface: primaryColor,
-    background: primaryColor,
-    onPrimary: accentColor,
-    onSecondary: accentColor,
-  ),
+  primaryColor: const Color(0xFFB71C1C), // Merah khas Toyota
+  scaffoldBackgroundColor: const Color(0xFF121212), // Background utama gelap
+  cardColor: const Color(0xFF1E1E1E),
   appBarTheme: const AppBarTheme(
-    backgroundColor: primaryColor,
-    foregroundColor: accentColor,
+    backgroundColor: Color(0xFF1E1E1E),
+    foregroundColor: Colors.white,
+    elevation: 0,
+  ),
+  textTheme: const TextTheme(
+    bodyLarge: TextStyle(color: Colors.white),
+    bodyMedium: TextStyle(color: Colors.white70),
+    titleLarge: TextStyle(color: Colors.white),
+  ),
+  iconTheme: const IconThemeData(color: Colors.white),
+  switchTheme: SwitchThemeData(
+    thumbColor: WidgetStateProperty.all(Colors.redAccent),
+    trackColor: WidgetStateProperty.all(Colors.white24),
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      backgroundColor: secondaryColor,
-      foregroundColor: accentColor,
+      backgroundColor: Colors.redAccent,
+      foregroundColor: Colors.white,
+      textStyle: const TextStyle(fontWeight: FontWeight.bold),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
     ),
   ),
-  useMaterial3: true,
+  colorScheme: const ColorScheme.dark(
+    primary: Colors.redAccent,
+    secondary: Colors.white70,
+    surface: Color(0xFF1E1E1E),
+  ),
 );
