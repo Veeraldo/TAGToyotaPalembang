@@ -52,23 +52,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final file = File(pickedFile.path);
       setState(() => _imageFile = file);
 
-      // Baca bytes
       final bytes = await file.readAsBytes();
 
-      // Decode image
       img.Image? image = img.decodeImage(bytes);
       if (image == null) return;
 
-      // Resize agar tidak terlalu besar (max width 800px)
       img.Image resized = img.copyResize(image, width: 800);
 
-      // Encode ke JPG dengan quality 85
       final resizedBytes = img.encodeJpg(resized, quality: 85);
 
-      // Convert ke Base64
       final base64Image = base64Encode(resizedBytes);
 
-      // Simpan ke Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user!.uid)
