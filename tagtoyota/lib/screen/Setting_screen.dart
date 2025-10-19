@@ -1,89 +1,84 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../util/theme_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
+  Future<void> _openWhatsApp(String phone, String message) async {
+    final text = Uri.encodeComponent(message);
+    final uri = Uri.parse("https://wa.me/$phone?text=$text");
+
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw Exception('Tidak dapat membuka WhatsApp');
+    }
+  }
+
+  void _showWhatsAppChoice(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final username = user?.displayName ?? "Pengguna";
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Hubungi via WhatsApp"),
+        content: const Text("Pilih kontak yang ingin kamu hubungi:"),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _openWhatsApp(
+                "6282186291290",
+                "Hai Veraldo, saya $username dari PT TAG Toyota Palembang ingin bertanya terkait Aplikasi Reminder Ulang Tahun Customer.",
+              );
+            },
+            icon: const Icon(Icons.person, color: Colors.green),
+            label: const Text("Veraldo"),
+          ),
+          TextButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _openWhatsApp(
+                "628153900803",
+                "Halo Siti Fatimah Az'Zahrah, saya $username dari PT TAG Toyota Palembang ingin bertanya terkait Aplikasi Reminder Ulang Tahun Customer.",
+              );
+            },
+            icon: const Icon(Icons.person, color: Colors.green),
+            label: const Text("Siti Fatimah"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Batal", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDarkMode = themeProvider.isDarkMode;
-    final theme = Theme.of(context);
-
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text("Pengaturan"),
-        backgroundColor: theme.appBarTheme.backgroundColor ?? theme.primaryColor,
-        foregroundColor: theme.appBarTheme.foregroundColor ?? Colors.white,
-        elevation: 2,
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        foregroundColor: const Color.fromARGB(255, 51, 51, 51),
         centerTitle: true,
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const SizedBox(height: 20),
-
-          // Kartu Mode Gelap / Terang
-          Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            color: isDarkMode ? Colors.grey[850] : Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        isDarkMode ? Icons.wb_sunny_rounded : Icons.dark_mode_rounded,
-                        color: isDarkMode ? Colors.amberAccent : Colors.grey[800],
-                      ),
-                      const SizedBox(width: 16),
-                      Text(
-                        isDarkMode ? "Mode Terang" : "Mode Gelap",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                          color: isDarkMode ? Colors.white : Colors.black,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Switch.adaptive(
-                    value: themeProvider.isDarkMode,
-                    activeColor: Colors.amberAccent,
-                    onChanged: (value) => themeProvider.toggleTheme(value),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 30),
-
-          // Kartu Tentang Aplikasi
           Card(
             elevation: 3,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            color: isDarkMode ? Colors.grey[850] : Colors.white,
             child: ListTile(
-              leading: Icon(Icons.info_outline,
-                  color: isDarkMode ? Colors.white70 : Colors.grey[800]),
-              title: Text(
+              leading: const Icon(Icons.info_outline, color: Colors.red),
+              title: const Text(
                 "Tentang Aplikasi",
-                style: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black,
-                    fontWeight: FontWeight.w500),
+                style: TextStyle(fontWeight: FontWeight.w500),
               ),
-              trailing: Icon(Icons.arrow_forward_ios,
-                  size: 16, color: isDarkMode ? Colors.white54 : Colors.black54),
               onTap: () {
                 showAboutDialog(
                   context: context,
@@ -92,40 +87,26 @@ class SettingsScreen extends StatelessWidget {
                   applicationIcon: const Icon(Icons.car_rental, size: 40),
                   children: const [
                     Text(
-                        'Aplikasi ini dikembangkan oleh Mahasiswa Universitas Multi Data Palembang, Veraldo 2327250001, Siti Fatimah AzZahrah'),
+                      'Aplikasi ini dikembangkan oleh Mahasiswa Universitas Multi Data Palembang. Veraldo (2327250001) dan Siti Fatimah Az Zahrah (2327250055).',
+                    ),
                   ],
                 );
               },
             ),
           ),
-
           const SizedBox(height: 20),
-
-          // Kartu Bantuan
           Card(
             elevation: 3,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            color: isDarkMode ? Colors.grey[850] : Colors.white,
             child: ListTile(
-              leading: Icon(Icons.help_outline,
-                  color: isDarkMode ? Colors.white70 : Colors.grey[800]),
-              title: Text(
-                "Bantuan",
-                style: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black,
-                    fontWeight: FontWeight.w500),
+              leading: const Icon(Icons.chat, color: Colors.green),
+              title: const Text(
+                "Butuh Bantuan?",
+                style: TextStyle(fontWeight: FontWeight.w500),
               ),
-              trailing: Icon(Icons.arrow_forward_ios,
-                  size: 16, color: isDarkMode ? Colors.white54 : Colors.black54),
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Fitur Bantuan belum tersedia.'),
-                  ),
-                );
-              },
+              onTap: () => _showWhatsAppChoice(context),
             ),
           ),
         ],

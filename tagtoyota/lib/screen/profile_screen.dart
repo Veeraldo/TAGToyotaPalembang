@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tagtoyota/screen/ManualCustomer_screen.dart';
+import 'package:tagtoyota/screen/customer_data_screen.dart';
 import 'package:tagtoyota/screen/signin_screen.dart';
 import 'setting_screen.dart';
 import 'package:image/image.dart' as img;
@@ -38,11 +40,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _photoBase64 = doc.data()?['photoBase64'];
       });
     } catch (e) {
-      debugPrint("❌ Gagal memuat foto profil: $e");
+      debugPrint(" Gagal memuat foto profil: $e");
     }
   }
 
-  /// Pilih gambar, compress, convert ke Base64, dan simpan ke Firestore
+
   Future<void> _pickAndSaveImage() async {
     try {
       final pickedFile =
@@ -95,7 +97,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final username = user?.displayName ?? "Nama Pengguna";
+    final username = user?.displayName ?? "Pengguna";
     final email = user?.email ?? "email@domain.com";
 
     ImageProvider<Object> profileImage;
@@ -149,7 +151,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 MaterialPageRoute(builder: (_) => const SettingsScreen()),
               );
             }),
-            _buildMenuItem(Icons.people, "Isi Data Customer", () {}),
+            _buildMenuItem(Icons.people, "Isi Data Customer", () {
+  showModalBottomSheet(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    isScrollControlled: true, // agar bisa scroll
+    builder: (context) => DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.3,
+      minChildSize: 0.2,
+      maxChildSize: 0.8,
+      builder: (context, scrollController) => SingleChildScrollView(
+        controller: scrollController,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                "Pilih Metode Input Data Customer",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.upload_file),
+              title: const Text("Dari Excel"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CustomerDataScreen()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: const Text("Manual"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ManualCustomerScreen()),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}),
+
+
             const SizedBox(height: 40),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30.0),
@@ -158,7 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: const Icon(Icons.logout),
                 label: const Text("Logout"),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor: const Color.fromARGB(255, 255, 17, 0),
                   foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(
