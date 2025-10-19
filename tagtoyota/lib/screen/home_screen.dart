@@ -250,7 +250,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// === HOME CONTENT ===
   Widget _buildHomeContent(String username) {
     return SingleChildScrollView(
       child: Padding(
@@ -316,7 +315,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Model & Tanggal SPK
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
@@ -331,7 +329,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ],
                               ),
                               const SizedBox(height: 4),
-                              // Tanggal Lahir
                               Row(
                                 children: [
                                   const Icon(Icons.calendar_today, size: 20, color: Colors.black54),
@@ -360,39 +357,38 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ],
                               const SizedBox(height: 8),
-                              // Tombol Chat per event
                               Align(
-  alignment: Alignment.centerRight,
-  child: FloatingActionButton.small(
-    backgroundColor: Colors.red,
-    onPressed: () {
-      final phone = event['No_HP'];
+                                alignment: Alignment.centerRight,
+                                child: FloatingActionButton.small(
+                                  backgroundColor: Colors.red,
+                                  onPressed: () {
+                                    final phone = event['No_HP'];
 
-      final today = DateTime.now();
-      final birthDateParts = event['Tanggal_Lahir'].split('/');
-      final birthDay = int.parse(birthDateParts[0]);
-      final birthMonth = int.parse(birthDateParts[1]);
+                                    final today = DateTime.now();
+                                    final birthDateParts = event['Tanggal_Lahir'].split('/');
+                                    final birthDay = int.parse(birthDateParts[0]);
+                                    final birthMonth = int.parse(birthDateParts[1]);
 
 
-      final nextBirthday = DateTime(today.year, birthMonth, birthDay);
+                                    final nextBirthday = DateTime(today.year, birthMonth, birthDay);
 
-      String message;
+                                    String message;
 
-      if (nextBirthday.difference(today).inDays == 7) {
-        // H-7
-        message = "Hai ${event['Customer_Name']}, saya $username dari PT TAG Toyota Palembang ingin mengingatkan bahwa ${event['Customer_Name']} sebentar lagi Ulang Tahun nih! Kalau berkenan, silahkan mengisi form di bawah ini.";
-      } else if (nextBirthday.day == today.day && nextBirthday.month == today.month) {
-        // Hari ulang tahun
-        message = "Hai ${event['Customer_Name']}, Selamat Ulang Tahun! 🎉 Semoga sehat dan sukses selalu!";
-      } else {
-        message = "Hai ${event['Customer_Name']}, saya $username dari PT TAG Toyota Palembang ingin mengingatkan tentang customer.";
-      }
+                                    if (nextBirthday.difference(today).inDays == 6) {
+                                      // H-7
+                                      message = "Hai ${event['Customer_Name']}, saya $username dari PT TAG Toyota Palembang ingin mengingatkan bahwa ${event['Customer_Name']} sebentar lagi Ulang Tahun nih! Kalau berkenan, silahkan mengisi form di bawah ini.";
+                                    } else if (nextBirthday.day == today.day && nextBirthday.month == today.month) {
+                                      // Hari ulang tahun
+                                      message = "Hai ${event['Customer_Name']}, Selamat Ulang Tahun! 🎉 Semoga sehat dan sukses selalu!";
+                                    } else {
+                                      message = "Hai ${event['Customer_Name']}, saya $username dari PT TAG Toyota Palembang ingin mengingatkan tentang customer.";
+                                    }
 
-      _openWhatsApp(phone, message);
-    },
-    child: const Icon(Icons.chat, color: Colors.white, size: 20),
-  ),
-),
+                                    _openWhatsApp(phone, message);
+                                  },
+                                  child: const Icon(Icons.chat, color: Colors.white, size: 20),
+                                ),
+                              ),
 
                             ],
                           ),

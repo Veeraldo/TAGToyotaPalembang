@@ -123,7 +123,7 @@ class _CustomerDataScreenState extends State<CustomerDataScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Isi Data Customer"),
-        backgroundColor: const Color.fromARGB(255, 255, 17, 0),
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         foregroundColor: Colors.white,
       ),
       body: Padding(
