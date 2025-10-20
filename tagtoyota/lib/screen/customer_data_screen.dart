@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:excel/excel.dart';
@@ -14,26 +15,36 @@ class CustomerDataScreen extends StatefulWidget {
 
 class _CustomerDataScreenState extends State<CustomerDataScreen> {
   List<Map<String, dynamic>> _excelData = [];
-  final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
+  final DateFormat _excelDateFormat = DateFormat('dd-MM-yyyy');
+  bool _isLoading = false;
 
-  /// Fungsi konversi angka Excel menjadi DateTime
-  DateTime? excelDateToDateTime(dynamic value) {
-    const gsDateBase = 2209161600 / 86400;
-    const gsDateFactor = 86400000;
+  // Fungsi parse date tetap sama
+  String parseExcelDate(dynamic value) {
+    if (value == null) return '';
 
-    if (value == null) return null;
-
-    double? dateNumber;
-    if (value is double) {
-      dateNumber = value;
-    } else if (value is String) {
-      dateNumber = double.tryParse(value);
+    if (value is num) {
+      final date = DateTime.fromMillisecondsSinceEpoch(
+        ((value - 25569) * 86400000).toInt(),
+        isUtc: true,
+      );
+      return _excelDateFormat.format(date);
     }
 
-    if (dateNumber == null) return null;
+    if (value is String) {
+      try {
+        final parsed = DateFormat('M/d/yyyy').parse(value);
+        return _excelDateFormat.format(parsed);
+      } catch (_) {
+        try {
+          final parsed = DateFormat('dd/MM/yyyy').parse(value);
+          return _excelDateFormat.format(parsed);
+        } catch (_) {
+          return value;
+        }
+      }
+    }
 
-    final millis = (dateNumber - gsDateBase) * gsDateFactor;
-    return DateTime.fromMillisecondsSinceEpoch(millis.toInt(), isUtc: true);
+    return value.toString();
   }
 
   Future<void> _pickExcelFile() async {
@@ -44,35 +55,22 @@ class _CustomerDataScreenState extends State<CustomerDataScreen> {
       );
 
       if (result != null && result.files.single.path != null) {
-        final file = File(result.files.single.path!);
-        final bytes = await file.readAsBytes();
-        final excel = Excel.decodeBytes(bytes);
+        setState(() => _isLoading = true);
 
-        List<Map<String, dynamic>> tempData = [];
+        final path = result.files.single.path!;
 
-        for (var table in excel.tables.keys) {
-          for (var i = 1; i < excel.tables[table]!.rows.length; i++) {
-            var row = excel.tables[table]!.rows[i];
-
-            final birthDate = excelDateToDateTime(row[2]?.value);
-            final spkDate = excelDateToDateTime(row[4]?.value);
-
-            tempData.add({
-              'No_Rangka': row[0]?.value ?? '',
-              'Customer_Name': row[1]?.value ?? '',
-              'Tanggal_Lahir': birthDate,
-              'Model': row[3]?.value ?? '',
-              'Tanggal_Spk_Do': spkDate,
-              'No_HP': row[5]?.value ?? '',
-            });
-          }
-        }
+        final tempData = await compute(_parseExcelInBackground, {
+          'path': path,
+          'dateFormat': _excelDateFormat.pattern,
+        });
 
         setState(() {
-          _excelData = tempData;
+          _excelData = List<Map<String, dynamic>>.from(tempData);
+          _isLoading = false;
         });
       }
     } catch (e) {
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Gagal memuat file Excel: $e')),
       );
@@ -83,23 +81,14 @@ class _CustomerDataScreenState extends State<CustomerDataScreen> {
     if (_excelData.isEmpty) return;
 
     try {
+      setState(() => _isLoading = true);
+
       final firestore = FirebaseFirestore.instance;
       final batch = firestore.batch();
 
       for (var data in _excelData) {
         final docRef = firestore.collection('customers').doc();
-        batch.set(docRef, {
-          'No_Rangka': data['No_Rangka'],
-          'Customer_Name': data['Customer_Name'],
-          'Tanggal_Lahir': data['Tanggal_Lahir'] != null
-              ? Timestamp.fromDate(data['Tanggal_Lahir'])
-              : null,
-          'Model': data['Model'],
-          'Tanggal_Spk_Do': data['Tanggal_Spk_Do'] != null
-              ? Timestamp.fromDate(data['Tanggal_Spk_Do'])
-              : null,
-          'No_HP': data['No_HP'],
-        });
+        batch.set(docRef, data);
       }
 
       await batch.commit();
@@ -110,8 +99,10 @@ class _CustomerDataScreenState extends State<CustomerDataScreen> {
 
       setState(() {
         _excelData.clear();
+        _isLoading = false;
       });
     } catch (e) {
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Gagal upload data: $e')),
       );
@@ -123,86 +114,132 @@ class _CustomerDataScreenState extends State<CustomerDataScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Isi Data Customer"),
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            ElevatedButton.icon(
-              onPressed: _pickExcelFile,
-              icon: const Icon(Icons.upload_file),
-              label: const Text("Pilih File Excel"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 255, 17, 0),
-                foregroundColor: Colors.white,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: _pickExcelFile,
+                    icon: const Icon(Icons.upload_file),
+                    label: const Text("Pilih File Excel"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 255, 17, 0),
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: _excelData.isEmpty
+                        ? const Center(
+                            child: Text(
+                                "Belum ada data. Pilih file Excel terlebih dahulu."),
+                          )
+                        : Column(
+                            children: [
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: DataTable(
+                                    border: TableBorder.all(
+                                        color: Colors.grey.shade300),
+                                    columns: const [
+                                      DataColumn(label: Text('No Rangka')),
+                                      DataColumn(label: Text('Customer Name')),
+                                      DataColumn(label: Text('Tanggal Lahir')),
+                                      DataColumn(label: Text('Model')),
+                                      DataColumn(
+                                          label: Text('Tanggal SPK/DO')),
+                                      DataColumn(label: Text('No HP')),
+                                    ],
+                                    rows: _excelData
+                                        .map(
+                                          (data) => DataRow(
+                                            cells: [
+                                              DataCell(Text(
+                                                  data['No_Rangka'] ?? '')),
+                                              DataCell(Text(
+                                                  data['Customer_Name'] ?? '')),
+                                              DataCell(Text(
+                                                  data['Tanggal_Lahir'] ?? '')),
+                                              DataCell(Text(
+                                                  data['Model'] ?? '')),
+                                              DataCell(Text(
+                                                  data['Tanggal_Spk_Do'] ?? '')),
+                                              DataCell(
+                                                  Text(data['No_HP'] ?? '')),
+                                            ],
+                                          ),
+                                        )
+                                        .toList(),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                onPressed: _uploadToFirebase,
+                                icon: const Icon(Icons.cloud_upload),
+                                label:
+                                    const Text("Upload ke Firebase"),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: _excelData.isEmpty
-                  ? const Center(
-                      child:
-                          Text("Belum ada data. Pilih file Excel terlebih dahulu."),
-                    )
-                  : Column(
-                      children: [
-                        Expanded(
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: DataTable(
-                              border:
-                                  TableBorder.all(color: Colors.grey.shade300),
-                              columns: const [
-                                DataColumn(label: Text('No Rangka')),
-                                DataColumn(label: Text('Customer Name')),
-                                DataColumn(label: Text('Tanggal Lahir')),
-                                DataColumn(label: Text('Model')),
-                                DataColumn(label: Text('Tanggal SPK/DO')),
-                                DataColumn(label: Text('No HP')),
-                              ],
-                              rows: _excelData
-                                  .map(
-                                    (data) => DataRow(
-                                      cells: [
-                                        DataCell(
-                                            Text(data['No_Rangka'].toString())),
-                                        DataCell(Text(
-                                            data['Customer_Name'].toString())),
-                                        DataCell(Text(data['Tanggal_Lahir'] != null
-                                            ? _dateFormat
-                                                .format(data['Tanggal_Lahir'])
-                                            : '')),
-                                        DataCell(Text(data['Model'].toString())),
-                                        DataCell(Text(data['Tanggal_Spk_Do'] != null
-                                            ? _dateFormat
-                                                .format(data['Tanggal_Spk_Do'])
-                                            : '')),
-                                        DataCell(Text(data['No_HP'].toString())),
-                                      ],
-                                    ),
-                                  )
-                                  .toList(),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: _uploadToFirebase,
-                          icon: const Icon(Icons.cloud_upload),
-                          label: const Text("Upload ke Firebase"),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-            ),
-          ],
-        ),
-      ),
     );
   }
+}
+
+
+List<Map<String, dynamic>> _parseExcelInBackground(Map args) {
+  final file = File(args['path']);
+  final bytes = file.readAsBytesSync();
+  final excel = Excel.decodeBytes(bytes);
+  final dateFormat = DateFormat(args['dateFormat']);
+
+  String parse(dynamic value) {
+    if (value == null) return '';
+
+    if (value is num) {
+      final date = DateTime.fromMillisecondsSinceEpoch(
+        ((value - 25569) * 86400000).toInt(),
+        isUtc: true,
+      );
+      return dateFormat.format(date);
+    }
+
+    if (value is String) return value;
+
+    return value.toString();
+  }
+
+  List<Map<String, dynamic>> tempData = [];
+
+  for (var table in excel.tables.keys) {
+    var sheet = excel.tables[table]!;
+
+    for (var i = 1; i < sheet.rows.length; i++) {
+      var row = sheet.rows[i];
+      tempData.add({
+        'No_Rangka': row[0]?.value?.toString() ?? '',
+        'Customer_Name': row[1]?.value?.toString() ?? '',
+        'Tanggal_Lahir': parse(row[2]?.value),
+        'Model': row[3]?.value?.toString() ?? '',
+        'Tanggal_Spk_Do': parse(row[4]?.value),
+        'No_HP': row[5]?.value?.toString() ?? '',
+      });
+    }
+  }
+
+  return tempData;
 }
