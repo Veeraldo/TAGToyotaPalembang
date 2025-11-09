@@ -11,6 +11,7 @@ import 'package:tagtoyota/screen/profile_screen.dart';
 import 'package:tagtoyota/screen/search_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -194,7 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final List<String> _labels = ["Home", "Search", "Profile"];
     final List<Widget> _screens = [
       _buildHomeContent(username),
-      const SearchScreen(),
+      const SearchScreen(customMessages: {},),
       const ProfileScreen(),
     ];
 
@@ -331,7 +332,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       } else if (nextBirthday.difference(today).inDays == 6) {
                         message =
                             "Hai ${event['Customer_Name']}, saya $username dari PT TAG Toyota Palembang ingin mengingatkan bahwa kamu sebentar lagi ulang tahun!";
-                      } else if (nextBirthday.day == today.day && nextBirthday.month == today.month) {
+                      }else if (nextBirthday.difference(today).inDays == 2) {
+                        message =
+                            "Hai ${event['Customer_Name']}, saya $username dari PT TAG Toyota Palembang ingin mengingatkan bahwa 3 hari lagi kamu ulang tahun!";
+                      }else if (nextBirthday.day == today.day && nextBirthday.month == today.month) {
                         message =
                             "Hai ${event['Customer_Name']}, Selamat Ulang Tahun! 🎉 Semoga sehat dan sukses selalu!";
                       } else {
@@ -371,7 +375,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   const SizedBox(height: 4),
                                   Row(
                                     children: [
-                                      const Icon(Icons.calendar_today, size: 20, color: Colors.black54),
+                                      const Icon(Icons.cake, size: 20, color: Colors.black54),
                                       const SizedBox(width: 6),
                                       Text("${event['Tanggal_Lahir'] ?? '-'}",
                                           style: const TextStyle(fontSize: 14)),

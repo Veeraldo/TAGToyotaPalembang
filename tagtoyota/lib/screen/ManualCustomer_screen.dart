@@ -42,7 +42,7 @@ class _ManualCustomerScreenState extends State<ManualCustomerScreen> {
     }
   }
 
-  /// Fungsi untuk menyimpan data customer ke Firestore
+  
   Future<void> _saveCustomer() async {
     if (!_formKey.currentState!.validate()) return;
 

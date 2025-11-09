@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tagtoyota/screen/ManualCustomer_screen.dart';
-import 'package:tagtoyota/screen/customer_data_screen.dart';
 import 'package:tagtoyota/screen/signin_screen.dart';
 import 'setting_screen.dart';
 import 'package:image/image.dart' as img;
@@ -40,10 +39,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _photoBase64 = doc.data()?['photoBase64'];
       });
     } catch (e) {
-      debugPrint(" Gagal memuat foto profil: $e");
+      debugPrint("Gagal memuat foto profil: $e");
     }
   }
-
 
   Future<void> _pickAndSaveImage() async {
     try {
@@ -55,14 +53,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() => _imageFile = file);
 
       final bytes = await file.readAsBytes();
-
       img.Image? image = img.decodeImage(bytes);
       if (image == null) return;
 
       img.Image resized = img.copyResize(image, width: 800);
-
       final resizedBytes = img.encodeJpg(resized, quality: 85);
-
       final base64Image = base64Encode(resizedBytes);
 
       await FirebaseFirestore.instance
@@ -152,61 +147,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             }),
             _buildMenuItem(Icons.people, "Isi Data Customer", () {
-  showModalBottomSheet(
-    context: context,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    isScrollControlled: true, // agar bisa scroll
-    builder: (context) => DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.3,
-      minChildSize: 0.2,
-      maxChildSize: 0.8,
-      builder: (context, scrollController) => SingleChildScrollView(
-        controller: scrollController,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                "Pilih Metode Input Data Customer",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.upload_file),
-              title: const Text("Dari Excel"),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CustomerDataScreen()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text("Manual"),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ManualCustomerScreen()),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}),
-
-
+              // Langsung navigasi ke manual input tanpa modal
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ManualCustomerScreen()),
+              );
+            }),
             const SizedBox(height: 40),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30.0),

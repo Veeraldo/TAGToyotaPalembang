@@ -6,6 +6,7 @@ import 'package:tagtoyota/screen/splash_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  
 
   runApp(const MyApp());
 }

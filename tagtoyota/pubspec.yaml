@@ -27,6 +27,9 @@ dependencies:
   excel: ^4.0.6
   file_picker: ^10.3.3
   font_awesome_flutter: ^10.7.0
+  firebase_messaging: 16.0.3
+
+
 
 dev_dependencies:
   flutter_test:
