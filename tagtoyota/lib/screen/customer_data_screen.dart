@@ -18,7 +18,6 @@ class _CustomerDataScreenState extends State<CustomerDataScreen> {
   final DateFormat _excelDateFormat = DateFormat('dd-MM-yyyy');
   bool _isLoading = false;
 
-  // Fungsi parse date tetap sama
   String parseExcelDate(dynamic value) {
     if (value == null) return '';
 
@@ -94,7 +93,7 @@ class _CustomerDataScreenState extends State<CustomerDataScreen> {
       await batch.commit();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ Data berhasil diunggah ke Firebase!')),
+        const SnackBar(content: Text('✅ Data berhasil diunggah!')),
       );
 
       setState(() {

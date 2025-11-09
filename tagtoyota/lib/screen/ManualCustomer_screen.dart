@@ -84,7 +84,6 @@ class _ManualCustomerScreenState extends State<ManualCustomerScreen> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                // Nama Customer
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(labelText: 'Nama Customer'),
