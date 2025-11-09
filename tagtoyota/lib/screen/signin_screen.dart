@@ -59,7 +59,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       );
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Coba lagi")),
+                        SnackBar(content: Text("Email/Password Salah")),
                       );
                     }
                   },

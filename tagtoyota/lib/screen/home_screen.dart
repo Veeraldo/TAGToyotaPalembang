@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -23,6 +24,9 @@ class _HomeScreenState extends State<HomeScreen> {
   DateTime? _selectedDay;
   late String greeting;
 
+  // Simpan pesan custom per pelanggan
+  final Map<String, String> _customMessages = {};
+
   @override
   void initState() {
     super.initState();
@@ -30,7 +34,6 @@ class _HomeScreenState extends State<HomeScreen> {
     Future.delayed(const Duration(seconds: 1), _showPopup);
   }
 
-  /// === OPEN WHATSAPP ===
   Future<void> _openWhatsApp(String phone, String message) async {
     final text = Uri.encodeComponent(message);
     final uri = Uri.parse("https://wa.me/$phone?text=$text");
@@ -40,7 +43,48 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// === GREETING ===
+  Future<void> _editMessage(String customerName, String initialMessage) async {
+    final TextEditingController controller =
+        TextEditingController(text: initialMessage);
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Edit Pesan untuk $customerName"),
+        content: TextField(
+          controller: controller,
+          maxLines: 5,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            hintText: "Edit pesan sebelum disimpan...",
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              setState(() {
+                _customMessages[customerName] = controller.text;
+              });
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Pesan berhasil disimpan!"),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            child: const Text("Simpan"),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _updateGreeting() {
     final hour = DateTime.now().hour;
     if (hour >= 5 && hour < 12) {
@@ -54,7 +98,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// === QUOTE API ===
   Future<String> fetchAPI() async {
     try {
       final response = await http.get(Uri.parse('https://zenquotes.io/api/random'));
@@ -69,7 +112,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// === POPUP ===
   Future<void> _showPopup() async {
     final user = FirebaseAuth.instance.currentUser;
     final username = user?.displayName ?? "User";
@@ -100,7 +142,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// === BOTTOM NAVIGATION ===
   Widget _buildBottomNav(List<IconData> icons, List<String> labels) {
     return Container(
       decoration: BoxDecoration(
@@ -144,7 +185,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// === BUILD UI ===
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -196,7 +236,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// === HOME SCREEN DENGAN STREAMBUILDER REALTIME ===
   Widget _buildHomeContent(String username) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('customers').snapshots(),
@@ -209,7 +248,6 @@ class _HomeScreenState extends State<HomeScreen> {
           return const Center(child: Text("Tidak ada data pelanggan."));
         }
 
-        // === Olah data Firestore ke format tanggal ===
         final docs = snapshot.data!.docs;
         Map<DateTime, List<Map<String, dynamic>>> fullEvents = {};
         for (var doc in docs) {
@@ -280,6 +318,27 @@ class _HomeScreenState extends State<HomeScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: selectedEvents.map((event) {
+                      final phone = event['No_HP'] ?? '';
+                      final today = DateTime.now();
+                      final parts = event['Tanggal_Lahir'].split('/');
+                      final birthDay = int.parse(parts[0]);
+                      final birthMonth = int.parse(parts[1]);
+                      final nextBirthday = DateTime(today.year, birthMonth, birthDay);
+
+                      String message;
+                      if (_customMessages.containsKey(event['Customer_Name'])) {
+                        message = _customMessages[event['Customer_Name']]!;
+                      } else if (nextBirthday.difference(today).inDays == 6) {
+                        message =
+                            "Hai ${event['Customer_Name']}, saya $username dari PT TAG Toyota Palembang ingin mengingatkan bahwa kamu sebentar lagi ulang tahun!";
+                      } else if (nextBirthday.day == today.day && nextBirthday.month == today.month) {
+                        message =
+                            "Hai ${event['Customer_Name']}, Selamat Ulang Tahun! 🎉 Semoga sehat dan sukses selalu!";
+                      } else {
+                        message =
+                            "Hai ${event['Customer_Name']}, saya $username dari PT TAG Toyota Palembang ingin menyapa pelanggan terbaik kami.";
+                      }
+
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 6),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -319,33 +378,31 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ],
                                   ),
                                   const SizedBox(height: 8),
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: FloatingActionButton.small(
-                                      backgroundColor: Colors.red,
-                                      onPressed: () {
-                                        final phone = event['No_HP'] ?? '';
-                                        final today = DateTime.now();
-                                        final parts = event['Tanggal_Lahir'].split('/');
-                                        final birthDay = int.parse(parts[0]);
-                                        final birthMonth = int.parse(parts[1]);
-                                        final nextBirthday = DateTime(today.year, birthMonth, birthDay);
-                                        String message;
-                                        if (nextBirthday.difference(today).inDays == 6) {
-                                          message =
-                                              "Hai ${event['Customer_Name']}, saya $username dari PT TAG Toyota Palembang ingin mengingatkan bahwa kamu sebentar lagi ulang tahun!";
-                                        } else if (nextBirthday.day == today.day &&
-                                            nextBirthday.month == today.month) {
-                                          message =
-                                              "Hai ${event['Customer_Name']}, Selamat Ulang Tahun! 🎉 Semoga sehat dan sukses selalu!";
-                                        } else {
-                                          message =
-                                              "Hai ${event['Customer_Name']}, saya $username dari PT TAG Toyota Palembang ingin menyapa pelanggan terbaik kami.";
-                                        }
-                                        _openWhatsApp(phone, message);
-                                      },
-                                      child: const Icon(Icons.chat, color: Colors.white, size: 20),
-                                    ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      FloatingActionButton.small(
+                                        heroTag: null,
+                                        backgroundColor: Colors.grey.shade700,
+                                        onPressed: () {
+                                          _editMessage(event['Customer_Name'], message);
+                                        },
+                                        child: const Icon(Icons.edit, color: Colors.white, size: 20),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      FloatingActionButton.small(
+                                        heroTag: null,
+                                        backgroundColor: Colors.red,
+                                        onPressed: () {
+                                          _openWhatsApp(phone, message);
+                                        },
+                                        child: const Icon(
+                                          FontAwesomeIcons.whatsapp,
+                                          color: Colors.white,
+                                          size: 22,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
