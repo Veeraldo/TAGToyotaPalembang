@@ -55,8 +55,8 @@ class _ManualCustomerScreenState extends State<ManualCustomerScreen> {
         'Tanggal_Spk_Do': _spkController.text.trim(),
         'No_Rangka': _noRangkaController.text.trim(),
         'No_HP': _phoneController.text.trim(),
-        'Makanan_Favorit': _makananfavorit.text.trim(),
         'Hobby': _hobbyController.text.trim(),
+        'Makanan_Favorit': _makananfavorit.text.trim(),
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
