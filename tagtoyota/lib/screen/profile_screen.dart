@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tagtoyota/screen/ManualCustomer_screen.dart';
+import 'package:tagtoyota/screen/customer_data_screen.dart';
 import 'package:tagtoyota/screen/signin_screen.dart';
 import 'setting_screen.dart';
 import 'package:image/image.dart' as img;
@@ -76,7 +77,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       debugPrint("Error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal memperbarui foto: $e')),
+        SnackBar(content: Text('Gagal memperbarui foto')),
       );
     }
   }
@@ -147,10 +148,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             }),
             _buildMenuItem(Icons.people, "Isi Data Customer", () {
-              // Langsung navigasi ke manual input tanpa modal
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ManualCustomerScreen()),
+              showModalBottomSheet(
+                context: context,
+                builder: (ctx) => Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.edit),
+                      title: const Text('Input Manual'),
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ManualCustomerScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.upload_file),
+                      title: const Text('Import Excel'),
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CustomerDataScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
               );
             }),
             const SizedBox(height: 40),

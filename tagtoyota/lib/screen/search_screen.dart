@@ -3,7 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:tagtoyota/helper/googleform_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
+// import 'package:tagtoyota/helpers/google_form_helper.dart';
 
 class SearchScreen extends StatefulWidget {
   final Map<String, String> customMessages; // Ambil dari HomeScreen
@@ -36,25 +38,67 @@ class _SearchScreenState extends State<SearchScreen> {
     return FirebaseFirestore.instance.collection('customers').snapshots();
   }
 
-  void _openWhatsApp(String phone, String message) async {
+  Future<void> _openWhatsApp(String phone, String message) async {
     final text = Uri.encodeComponent(message);
     final uri = Uri.parse("https://wa.me/$phone?text=$text");
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
-  void _editMessage(String name, String oldMessage) async {
+  /// Kirim pesan dengan form Google yang sudah di-prefill ke WhatsApp
+  Future<void> _sendWhatsAppWithForm(
+    String customerName,
+    String customerId,
+    String phone,
+    String baseMessage,
+  ) async {
+    try {
+      final formUrl =
+          GoogleFormHelper.generateFormUrl(customerId, customerName);
+
+      // Gabungkan pesan dengan link form
+      final message = '''$baseMessage
+
+Silakan isi form berikut untuk melanjutkan:
+$formUrl
+
+ID dan Nama Anda sudah terisi otomatis di form.
+
+Terima kasih!''';
+
+      await _openWhatsApp(phone, message);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Diarahkan ke WhatsApp'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _editMessage(String name, String phone, String oldMessage) async {
     final controller = TextEditingController(text: oldMessage);
 
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Edit Pesan untuk $name"),
+        title: Text("Kirim Pesan untuk $name"),
         content: TextField(
           controller: controller,
           maxLines: 4,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
-            hintText: "Edit pesan...",
+            hintText: "Edit pesan sebelum dikirim...",
           ),
         ),
         actions: [
@@ -63,20 +107,22 @@ class _SearchScreenState extends State<SearchScreen> {
             child: const Text("Batal", style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
             onPressed: () {
-              setState(() {
-                _customMessages[name] = controller.text.trim();
-              });
+              final msg = controller.text.trim();
               Navigator.pop(context);
+              _openWhatsApp(phone, msg +
+                  "\n\nSilakan isi form berikut untuk melanjutkan:\n" +
+                  GoogleFormHelper.generateFormUrl(name, name) +
+                  "\n\nID dan Nama Anda sudah terisi otomatis di form.\n\nTerima kasih!");
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text("Pesan berhasil disimpan!"),
+                  content: Text("Pesan dikirim ke WhatsApp"),
                   backgroundColor: Colors.green,
                 ),
               );
             },
-            child: const Text("Simpan"),
+            child: const Text("Kirim"),
           ),
         ],
       ),
@@ -118,11 +164,31 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
+  int _getDaysUntilBirthday(String tanggalLahir) {
+    try {
+      final today = DateTime.now();
+      final parts = tanggalLahir.split('/');
+      final birthDay = int.parse(parts[0]);
+      final birthMonth = int.parse(parts[1]);
+      final nextBirthday = DateTime(today.year, birthMonth, birthDay);
+
+      final birthday = nextBirthday.isBefore(today)
+          ? DateTime(today.year + 1, birthMonth, birthDay)
+          : nextBirthday;
+
+      return birthday.difference(today).inDays;
+    } catch (_) {
+      return -1;
+    }
+  }
+
   Widget _buildCustomerCard(Map<String, dynamic> data) {
     final name = data['Customer_Name'] ?? '-';
     final phone = data['No_HP'] ?? '-';
     final tanggalLahir = data['Tanggal_Lahir'] ?? '-';
+    final customerId = data['ID'] ?? 'N/A'; // Ambil ID dari Firestore
     final message = _generateMessage(name, tanggalLahir);
+    final daysUntilBirthday = _getDaysUntilBirthday(tanggalLahir);
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
@@ -169,15 +235,36 @@ class _SearchScreenState extends State<SearchScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    // Tombol Edit tetap selalu muncul
                     IconButton(
                       icon: const Icon(Icons.edit, color: Colors.grey),
-                      onPressed: () => _editMessage(name, message),
+                      onPressed: () => _editMessage(name, phone, message),
+                      tooltip: 'Edit Pesan',
                     ),
-                    IconButton(
-                      icon: const Icon(FontAwesomeIcons.whatsapp,
-                          color: Colors.green),
-                      onPressed: () => _openWhatsApp(phone, message),
-                    ),
+                    const SizedBox(width: 4),
+                    // Tombol WhatsApp dengan form hanya muncul ketika 6 hari sebelum ulang tahun
+                    if (daysUntilBirthday == 6)
+                      IconButton(
+                        icon: const Icon(FontAwesomeIcons.whatsapp,
+                            color: Colors.green),
+                        onPressed: () {
+                          _sendWhatsAppWithForm(
+                            name,
+                            customerId,
+                            phone,
+                            message,
+                          );
+                        },
+                        tooltip: 'Kirim Form ke WhatsApp',
+                      ),
+                    // Tombol WhatsApp normal (tanpa form) muncul ketika bukan 6 hari sebelum
+                    if (daysUntilBirthday != 6)
+                      IconButton(
+                        icon: const Icon(FontAwesomeIcons.whatsapp,
+                            color: Colors.green),
+                        onPressed: () => _openWhatsApp(phone, message),
+                        tooltip: 'Kirim Pesan ke WhatsApp',
+                      ),
                   ],
                 ),
               ],

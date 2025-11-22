@@ -154,6 +154,8 @@ class _CustomerDataScreenState extends State<CustomerDataScreen> {
                                       DataColumn(
                                           label: Text('Tanggal SPK/DO')),
                                       DataColumn(label: Text('No HP')),
+                                      DataColumn(label: Text('Hobby')),
+                                      DataColumn(label: Text('Makanan Favorit')),
                                     ],
                                     rows: _excelData
                                         .map(
@@ -169,8 +171,12 @@ class _CustomerDataScreenState extends State<CustomerDataScreen> {
                                                   data['Model'] ?? '')),
                                               DataCell(Text(
                                                   data['Tanggal_Spk_Do'] ?? '')),
-                                              DataCell(
-                                                  Text(data['No_HP'] ?? '')),
+                                              DataCell(Text(
+                                                  data['No_HP'] ?? '')),
+                                              DataCell(Text(
+                                                  data['Hobby'] ?? '')),
+                                              DataCell(Text(
+                                                  data['Makanan_Favorit'] ?? '')),
                                             ],
                                           ),
                                         )
@@ -236,6 +242,8 @@ List<Map<String, dynamic>> _parseExcelInBackground(Map args) {
         'Model': row[3]?.value?.toString() ?? '',
         'Tanggal_Spk_Do': parse(row[4]?.value),
         'No_HP': row[5]?.value?.toString() ?? '',
+        'Hobby': row[6]?.value?.toString() ?? '',
+        'Makanan_Favorit': row[7]?.value?.toString() ?? '',
       });
     }
   }

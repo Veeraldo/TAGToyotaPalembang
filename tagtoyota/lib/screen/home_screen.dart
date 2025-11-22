@@ -7,10 +7,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:tagtoyota/helper/googleform_helper.dart';
 import 'package:tagtoyota/screen/profile_screen.dart';
 import 'package:tagtoyota/screen/search_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+// import 'package:tagtoyota/helpers/google_form_helper.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,7 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
   DateTime? _selectedDay;
   late String greeting;
 
-  // Simpan pesan custom per pelanggan
   final Map<String, String> _customMessages = {};
 
   @override
@@ -44,20 +44,70 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _editMessage(String customerName, String initialMessage) async {
+  /// Kirim pesan dengan form Google yang sudah di-prefill ke WhatsApp
+  Future<void> _sendWhatsAppWithForm(
+    String customerName,
+    String customerId,
+    String phone,
+    String baseMessage,
+  ) async {
+    try {
+      print('DEBUG - _sendWhatsAppWithForm called');
+      print('DEBUG - Customer: $customerName, ID: $customerId, Phone: $phone');
+      
+      final formUrl =
+          GoogleFormHelper.generateFormUrl(customerId, customerName);
+      print('DEBUG - Form URL: $formUrl');
+
+      // Gabungkan pesan dengan link form
+      final message = '''$baseMessage
+
+Silakan isi form berikut untuk melanjutkan:
+$formUrl
+
+ID dan Nama Anda sudah terisi otomatis di form.
+
+Terima kasih!''';
+
+      print('DEBUG - Full Message: $message');
+      
+      await _openWhatsApp(phone, message);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Diarahkan ke WhatsApp'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      print('DEBUG - Error: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _editMessage(String customerName, String phone,
+      String initialMessage, String customerId) async {
     final TextEditingController controller =
         TextEditingController(text: initialMessage);
 
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Edit Pesan untuk $customerName"),
+        title: Text("Kirim Pesan untuk $customerName"),
         content: TextField(
           controller: controller,
           maxLines: 5,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
-            hintText: "Edit pesan sebelum disimpan...",
+            hintText: "Edit pesan sebelum dikirim...",
           ),
         ),
         actions: [
@@ -66,20 +116,22 @@ class _HomeScreenState extends State<HomeScreen> {
             child: const Text("Batal", style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
             onPressed: () {
-              setState(() {
-                _customMessages[customerName] = controller.text;
-              });
+              final msg = controller.text.trim();
               Navigator.pop(context);
+              _openWhatsApp(phone, msg + 
+                  "\n\nSilakan isi form berikut untuk melanjutkan:\n" +
+                  GoogleFormHelper.generateFormUrl(customerId, customerName) +
+                  "\n\nID dan Nama Anda sudah terisi otomatis di form.\n\nTerima kasih!");
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text("Pesan berhasil disimpan!"),
+                  content: Text("Pesan dikirim ke WhatsApp"),
                   backgroundColor: Colors.green,
                 ),
               );
             },
-            child: const Text("Simpan"),
+            child: const Text("Kirim"),
           ),
         ],
       ),
@@ -101,7 +153,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<String> fetchAPI() async {
     try {
-      final response = await http.get(Uri.parse('https://zenquotes.io/api/random'));
+      final response =
+          await http.get(Uri.parse('https://zenquotes.io/api/random'));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return "${data[0]['q']} — ${data[0]['a']}";
@@ -147,8 +200,16 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 6, offset: const Offset(0, -3))],
-        borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black26,
+              blurRadius: 6,
+              offset: const Offset(0, -3))
+        ],
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
@@ -160,15 +221,20 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () => setState(() => _currentIndex = index),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.red.withOpacity(0.1) : Colors.transparent,
+                  color: isSelected
+                      ? Colors.red.withOpacity(0.1)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(icons[index], color: isSelected ? Colors.red : Colors.grey, size: isSelected ? 28 : 24),
+                    Icon(icons[index],
+                        color: isSelected ? Colors.red : Colors.grey,
+                        size: isSelected ? 28 : 24),
                     const SizedBox(height: 4),
                     if (isSelected)
                       Text(labels[index],
@@ -195,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final List<String> _labels = ["Home", "Search", "Profile"];
     final List<Widget> _screens = [
       _buildHomeContent(username),
-      const SearchScreen(customMessages: {},),
+      const SearchScreen(customMessages: {}),
       const ProfileScreen(),
     ];
 
@@ -215,7 +281,12 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 6, offset: const Offset(0, 3))],
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 6,
+                    offset: const Offset(0, 3))
+              ],
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(20),
                 bottomRight: Radius.circular(20),
@@ -225,7 +296,8 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Center(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Image.asset("assets/TAGNyamping.png", height: 50, fit: BoxFit.contain),
+                  child: Image.asset("assets/TAGNyamping.png",
+                      height: 50, fit: BoxFit.contain),
                 ),
               ),
             ),
@@ -242,7 +314,8 @@ class _HomeScreenState extends State<HomeScreen> {
       stream: FirebaseFirestore.instance.collection('customers').snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Colors.red));
+          return const Center(
+              child: CircularProgressIndicator(color: Colors.red));
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -252,7 +325,9 @@ class _HomeScreenState extends State<HomeScreen> {
         final docs = snapshot.data!.docs;
         Map<DateTime, List<Map<String, dynamic>>> fullEvents = {};
         for (var doc in docs) {
-          final data = doc.data() as Map<String, dynamic>;
+          final data = Map<String, dynamic>.from(doc.data() as Map<String, dynamic>);
+          
+          data['real_doc_id'] = doc.id;
           if (data.containsKey('Tanggal_Lahir')) {
             try {
               final parts = data['Tanggal_Lahir'].split('/');
@@ -269,7 +344,9 @@ class _HomeScreenState extends State<HomeScreen> {
         List<Map<String, dynamic>> selectedEvents = [];
         if (_selectedDay != null) {
           selectedEvents = fullEvents.entries
-              .where((entry) => entry.key.day == _selectedDay!.day && entry.key.month == _selectedDay!.month)
+              .where((entry) =>
+                  entry.key.day == _selectedDay!.day &&
+                  entry.key.month == _selectedDay!.month)
               .expand((entry) => entry.value)
               .toList();
         }
@@ -280,7 +357,10 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               children: [
                 Text("$greeting, $username",
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.black)),
+                    style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black)),
                 const SizedBox(height: 8),
                 TableCalendar(
                   locale: 'id_ID',
@@ -296,20 +376,28 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                   eventLoader: (day) {
                     return fullEvents.entries
-                        .where((entry) => entry.key.day == day.day && entry.key.month == day.month)
-                        .expand((entry) => entry.value.map((e) => e['Customer_Name'] ?? ''))
+                        .where((entry) =>
+                            entry.key.day == day.day &&
+                            entry.key.month == day.month)
+                        .expand((entry) =>
+                            entry.value.map((e) => e['Customer_Name'] ?? ''))
                         .toList();
                   },
                   headerStyle: const HeaderStyle(
                     titleCentered: true,
                     formatButtonVisible: false,
-                    leftChevronIcon: Icon(Icons.chevron_left, color: Colors.red),
-                    rightChevronIcon: Icon(Icons.chevron_right, color: Colors.red),
-                    titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    leftChevronIcon:
+                        Icon(Icons.chevron_left, color: Colors.red),
+                    rightChevronIcon:
+                        Icon(Icons.chevron_right, color: Colors.red),
+                    titleTextStyle: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   calendarStyle: const CalendarStyle(
-                    todayDecoration: BoxDecoration(color: Colors.black, shape: BoxShape.circle),
-                    selectedDecoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                    todayDecoration:
+                        BoxDecoration(color: Colors.black, shape: BoxShape.circle),
+                    selectedDecoration:
+                        BoxDecoration(color: Colors.red, shape: BoxShape.circle),
                     weekendTextStyle: TextStyle(color: Colors.red),
                     defaultTextStyle: TextStyle(color: Colors.black),
                   ),
@@ -320,22 +408,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: selectedEvents.map((event) {
                       final phone = event['No_HP'] ?? '';
+                      final customerId = event['real_doc_id'] ?? event['ID'] ?? 'N/A'; 
                       final today = DateTime.now();
                       final parts = event['Tanggal_Lahir'].split('/');
                       final birthDay = int.parse(parts[0]);
                       final birthMonth = int.parse(parts[1]);
-                      final nextBirthday = DateTime(today.year, birthMonth, birthDay);
+                      final nextBirthday =
+                          DateTime(today.year, birthMonth, birthDay);
 
                       String message;
-                      if (_customMessages.containsKey(event['Customer_Name'])) {
+                      if (_customMessages
+                          .containsKey(event['Customer_Name'])) {
                         message = _customMessages[event['Customer_Name']]!;
                       } else if (nextBirthday.difference(today).inDays == 6) {
                         message =
                             "Hai ${event['Customer_Name']}, saya $username dari PT TAG Toyota Palembang ingin mengingatkan bahwa kamu sebentar lagi ulang tahun!";
-                      }else if (nextBirthday.difference(today).inDays == 2) {
+                      } else if (nextBirthday.difference(today).inDays == 2) {
                         message =
                             "Hai ${event['Customer_Name']}, saya $username dari PT TAG Toyota Palembang ingin mengingatkan bahwa 3 hari lagi kamu ulang tahun!";
-                      }else if (nextBirthday.day == today.day && nextBirthday.month == today.month) {
+                      } else if (nextBirthday.day == today.day &&
+                          nextBirthday.month == today.month) {
                         message =
                             "Hai ${event['Customer_Name']}, Selamat Ulang Tahun! 🎉 Semoga sehat dan sukses selalu!";
                       } else {
@@ -345,67 +437,109 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 6),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                         child: ExpansionTile(
                           leading: const Icon(Icons.event, color: Colors.red),
                           title: Text("${event['Customer_Name']}",
-                              style: const TextStyle(fontWeight: FontWeight.bold)),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
                           trailing: const Icon(Icons.keyboard_arrow_down),
                           children: [
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Row(
                                         children: [
-                                          const Icon(Icons.directions_car, size: 20, color: Colors.black54),
+                                          const Icon(Icons.directions_car,
+                                              size: 20, color: Colors.black54),
                                           const SizedBox(width: 6),
                                           Text("${event['Model'] ?? '-'}",
-                                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                                              style: const TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500)),
                                         ],
                                       ),
-                                      Text("${event['Tanggal_Spk_Do'] ?? '-'}",
-                                          style: const TextStyle(fontSize: 14, color: Colors.black54)),
+                                      Text(
+                                          "${event['Tanggal_Spk_Do'] ?? '-'}",
+                                          style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.black54)),
                                     ],
                                   ),
                                   const SizedBox(height: 4),
                                   Row(
                                     children: [
-                                      const Icon(Icons.cake, size: 20, color: Colors.black54),
+                                      const Icon(Icons.cake,
+                                          size: 20, color: Colors.black54),
                                       const SizedBox(width: 6),
                                       Text("${event['Tanggal_Lahir'] ?? '-'}",
-                                          style: const TextStyle(fontSize: 14)),
+                                          style:
+                                              const TextStyle(fontSize: 14)),
                                     ],
                                   ),
                                   const SizedBox(height: 8),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
+                                      // Tombol Edit tetap selalu muncul
                                       FloatingActionButton.small(
                                         heroTag: null,
                                         backgroundColor: Colors.grey.shade700,
+                                        tooltip: 'Edit Pesan',
                                         onPressed: () {
-                                          _editMessage(event['Customer_Name'], message);
+                                          _editMessage(
+                                              event['Customer_Name'],
+                                              phone,
+                                              message,
+                                              customerId);
                                         },
-                                        child: const Icon(Icons.edit, color: Colors.white, size: 20),
+                                        child: const Icon(Icons.edit,
+                                            color: Colors.white, size: 20),
                                       ),
                                       const SizedBox(width: 10),
-                                      FloatingActionButton.small(
-                                        heroTag: null,
-                                        backgroundColor: Colors.red,
-                                        onPressed: () {
-                                          _openWhatsApp(phone, message);
-                                        },
-                                        child: const Icon(
-                                          FontAwesomeIcons.whatsapp,
-                                          color: Colors.white,
-                                          size: 22,
+                                      // Tombol WhatsApp dengan form hanya muncul ketika 6 hari sebelum ulang tahun
+                                      if (nextBirthday.difference(today).inDays == 6)
+                                        FloatingActionButton.small(
+                                          heroTag: null,
+                                          backgroundColor: Colors.red,
+                                          tooltip: 'Kirim ke WhatsApp dengan Form',
+                                          onPressed: () {
+                                            _sendWhatsAppWithForm(
+                                              event['Customer_Name'],
+                                              customerId,
+                                              phone,
+                                              message,
+                                            );
+                                          },
+                                          child: const Icon(
+                                            FontAwesomeIcons.whatsapp,
+                                            color: Colors.white,
+                                            size: 22,
+                                          ),
                                         ),
-                                      ),
+                                      // Tombol WhatsApp normal (tanpa form) muncul ketika bukan 6 hari sebelum
+                                      if (nextBirthday.difference(today).inDays != 6)
+                                        FloatingActionButton.small(
+                                          heroTag: null,
+                                          backgroundColor: Colors.red,
+                                          tooltip: 'Kirim Pesan ke WhatsApp',
+                                          onPressed: () {
+                                            _openWhatsApp(phone, message);
+                                          },
+                                          child: const Icon(
+                                            FontAwesomeIcons.whatsapp,
+                                            color: Colors.white,
+                                            size: 22,
+                                          ),
+                                        ),
                                     ],
                                   ),
                                 ],
@@ -418,7 +552,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   )
                 else
                   const Text("Tidak ada Customer pada tanggal ini.",
-                      style: TextStyle(color: Colors.black54, fontStyle: FontStyle.italic)),
+                      style: TextStyle(
+                          color: Colors.black54,
+                          fontStyle: FontStyle.italic)),
               ],
             ),
           ),

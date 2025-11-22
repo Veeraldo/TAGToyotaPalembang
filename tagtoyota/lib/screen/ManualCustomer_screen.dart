@@ -12,15 +12,16 @@ class ManualCustomerScreen extends StatefulWidget {
 class _ManualCustomerScreenState extends State<ManualCustomerScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controller untuk masing-masing field
   final _nameController = TextEditingController();
   final _birthController = TextEditingController();
   final _modelController = TextEditingController();
   final _spkController = TextEditingController();
   final _noRangkaController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _hobbyController = TextEditingController();
+  final _makananfavorit = TextEditingController();
 
-  /// Fungsi untuk memilih tanggal dengan DatePicker
+
   Future<void> _pickDate(TextEditingController controller) async {
     DateTime initialDate = DateTime.now();
     if (controller.text.isNotEmpty) {
@@ -54,6 +55,8 @@ class _ManualCustomerScreenState extends State<ManualCustomerScreen> {
         'Tanggal_Spk_Do': _spkController.text.trim(),
         'No_Rangka': _noRangkaController.text.trim(),
         'No_HP': _phoneController.text.trim(),
+        'Makanan_Favorit': _makananfavorit.text.trim(),
+        'Hobby': _hobbyController.text.trim(),
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -91,7 +94,6 @@ class _ManualCustomerScreenState extends State<ManualCustomerScreen> {
                 ),
                 const SizedBox(height: 10),
 
-                // Tanggal Lahir
                 TextFormField(
                   controller: _birthController,
                   readOnly: true,
@@ -104,14 +106,12 @@ class _ManualCustomerScreenState extends State<ManualCustomerScreen> {
                 ),
                 const SizedBox(height: 10),
 
-                // Model
                 TextFormField(
                   controller: _modelController,
                   decoration: const InputDecoration(labelText: 'Model'),
                 ),
                 const SizedBox(height: 10),
 
-                // Tanggal SPK/DO
                 TextFormField(
                   controller: _spkController,
                   readOnly: true,
@@ -123,14 +123,12 @@ class _ManualCustomerScreenState extends State<ManualCustomerScreen> {
                 ),
                 const SizedBox(height: 10),
 
-                // No Rangka
                 TextFormField(
                   controller: _noRangkaController,
                   decoration: const InputDecoration(labelText: 'No Rangka'),
                 ),
                 const SizedBox(height: 10),
 
-                // No HP
                 TextFormField(
                   controller: _phoneController,
                   decoration: const InputDecoration(
