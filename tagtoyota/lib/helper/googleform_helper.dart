@@ -19,7 +19,13 @@ class GoogleFormHelper {
     final encodedId = Uri.encodeQueryComponent(customerId);
     final encodedName = Uri.encodeQueryComponent(customerName);
     
-    return '$formBaseUrl?$idFieldEntry=$encodedId&$nameFieldEntry=$encodedName';
+    final url = '$formBaseUrl?$idFieldEntry=$encodedId&$nameFieldEntry=$encodedName';
+    
+    print('DEBUG - Generated Form URL: $url');
+    print('DEBUG - Customer ID: $customerId');
+    print('DEBUG - Customer Name: $customerName');
+    
+    return url;
   }
 
   /// Kirim ke WhatsApp dengan link Google Form yang sudah di-prefill

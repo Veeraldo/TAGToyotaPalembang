@@ -15,36 +15,9 @@ class CustomerDataScreen extends StatefulWidget {
 
 class _CustomerDataScreenState extends State<CustomerDataScreen> {
   List<Map<String, dynamic>> _excelData = [];
-  final DateFormat _excelDateFormat = DateFormat('dd-MM-yyyy');
+  final DateFormat _excelDateFormat = DateFormat('dd/MM/yyyy');
   bool _isLoading = false;
 
-  String parseExcelDate(dynamic value) {
-    if (value == null) return '';
-
-    if (value is num) {
-      final date = DateTime.fromMillisecondsSinceEpoch(
-        ((value - 25569) * 86400000).toInt(),
-        isUtc: true,
-      );
-      return _excelDateFormat.format(date);
-    }
-
-    if (value is String) {
-      try {
-        final parsed = DateFormat('M/d/yyyy').parse(value);
-        return _excelDateFormat.format(parsed);
-      } catch (_) {
-        try {
-          final parsed = DateFormat('dd/MM/yyyy').parse(value);
-          return _excelDateFormat.format(parsed);
-        } catch (_) {
-          return value;
-        }
-      }
-    }
-
-    return value.toString();
-  }
 
   Future<void> _pickExcelFile() async {
     try {
@@ -62,6 +35,8 @@ class _CustomerDataScreenState extends State<CustomerDataScreen> {
           'path': path,
           'dateFormat': _excelDateFormat.pattern,
         });
+
+        print('DEBUG - Parsed Excel Data: $tempData');
 
         setState(() {
           _excelData = List<Map<String, dynamic>>.from(tempData);
@@ -214,17 +189,32 @@ List<Map<String, dynamic>> _parseExcelInBackground(Map args) {
 
   String parse(dynamic value) {
     if (value == null) return '';
-
-    if (value is num) {
-      final date = DateTime.fromMillisecondsSinceEpoch(
-        ((value - 25569) * 86400000).toInt(),
-        isUtc: true,
-      );
-      return dateFormat.format(date);
+    // Jika value DateTime, format ke dd/MM/yyyy
+    if (value is DateTime) {
+      return DateFormat('dd/MM/yyyy').format(value);
     }
-
-    if (value is String) return value;
-
+    // Jika value angka (serial Excel), konversi ke DateTime lalu format
+    if (value is num) {
+      try {
+        final millis = ((value - 25569) * 86400000).toInt();
+        final dt = DateTime.fromMillisecondsSinceEpoch(millis, isUtc: true).toLocal();
+        return DateFormat('dd/MM/yyyy').format(dt);
+      } catch (_) {
+        return value.toString();
+      }
+    }
+    // Jika value string, coba parse ke DateTime dulu
+    if (value is String) {
+      final s = value.trim();
+      if (s.isEmpty) return '';
+      try {
+        final dt = DateFormat('dd/MM/yyyy').parseStrict(s);
+        return DateFormat('dd/MM/yyyy').format(dt);
+      } catch (_) {
+        // Jika gagal, return string apa adanya
+        return s;
+      }
+    }
     return value.toString();
   }
 
@@ -235,6 +225,7 @@ List<Map<String, dynamic>> _parseExcelInBackground(Map args) {
 
     for (var i = 1; i < sheet.rows.length; i++) {
       var row = sheet.rows[i];
+      print('DEBUG - Processing row SPK ${row[4]?.value}');
       tempData.add({
         'No_Rangka': row[0]?.value?.toString() ?? '',
         'Customer_Name': row[1]?.value?.toString() ?? '',
@@ -245,6 +236,8 @@ List<Map<String, dynamic>> _parseExcelInBackground(Map args) {
         'Hobby': row[6]?.value?.toString() ?? '',
         'Makanan_Favorit': row[7]?.value?.toString() ?? '',
       });
+
+      print('DEBUG - Added row ${i}: ${tempData.last}');
     }
   }
 

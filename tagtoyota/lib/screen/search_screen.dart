@@ -86,7 +86,7 @@ Terima kasih!''';
     }
   }
 
-  Future<void> _editMessage(String name, String phone, String oldMessage) async {
+  Future<void> _editMessage(String name, String phone, String oldMessage, dynamic tanggalLahir) async {
     final controller = TextEditingController(text: oldMessage);
 
     await showDialog(
@@ -111,10 +111,14 @@ Terima kasih!''';
             onPressed: () {
               final msg = controller.text.trim();
               Navigator.pop(context);
-              _openWhatsApp(phone, msg +
-                  "\n\nSilakan isi form berikut untuk melanjutkan:\n" +
-                  GoogleFormHelper.generateFormUrl(name, name) +
-                  "\n\nID dan Nama Anda sudah terisi otomatis di form.\n\nTerima kasih!");
+              final includeForm = _getDaysUntilBirthday(tanggalLahir) == 6;
+              final fullMsg = includeForm
+                  ? msg +
+                      "\n\nSilakan isi form berikut untuk melanjutkan:\n" +
+                      GoogleFormHelper.generateFormUrl(name, name) +
+                      "\n\nID dan Nama Anda sudah terisi otomatis di form.\n\nTerima kasih!"
+                  : msg;
+              _openWhatsApp(phone, fullMsg);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text("Pesan dikirim ke WhatsApp"),
@@ -129,7 +133,27 @@ Terima kasih!''';
     );
   }
 
-  String _generateMessage(String name, String tanggalLahir) {
+  DateTime? _toDate(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    if (value is Timestamp) return value.toDate();
+    if (value is String) {
+      for (final fmt in [
+        DateFormat('MM/dd/yyyy'),
+        DateFormat('dd/MM/yyyy'),
+        DateFormat('M/d/yyyy'),
+        DateFormat('d/M/yyyy'),
+        DateFormat('yyyy-MM-dd'),
+      ]) {
+        try {
+          return fmt.parse(value);
+        } catch (_) {}
+      }
+    }
+    return null;
+  }
+
+  String _generateMessage(String name, dynamic tanggalLahir) {
     final today = DateTime.now();
     final user = FirebaseAuth.instance.currentUser;
     final username = user?.displayName ?? "User";
@@ -139,9 +163,10 @@ Terima kasih!''';
     }
 
     try {
-      final parts = tanggalLahir.split('/');
-      final birthDay = int.parse(parts[0]);
-      final birthMonth = int.parse(parts[1]);
+      final dob = _toDate(tanggalLahir);
+      if (dob == null) throw 'no dob';
+      final birthDay = dob.day;
+      final birthMonth = dob.month;
       final nextBirthday = DateTime(today.year, birthMonth, birthDay);
 
       final birthday = nextBirthday.isBefore(today)
@@ -164,12 +189,13 @@ Terima kasih!''';
     }
   }
 
-  int _getDaysUntilBirthday(String tanggalLahir) {
+  int _getDaysUntilBirthday(dynamic tanggalLahir) {
     try {
       final today = DateTime.now();
-      final parts = tanggalLahir.split('/');
-      final birthDay = int.parse(parts[0]);
-      final birthMonth = int.parse(parts[1]);
+      final dob = _toDate(tanggalLahir);
+      if (dob == null) return -1;
+      final birthDay = dob.day;
+      final birthMonth = dob.month;
       final nextBirthday = DateTime(today.year, birthMonth, birthDay);
 
       final birthday = nextBirthday.isBefore(today)
@@ -185,7 +211,11 @@ Terima kasih!''';
   Widget _buildCustomerCard(Map<String, dynamic> data) {
     final name = data['Customer_Name'] ?? '-';
     final phone = data['No_HP'] ?? '-';
-    final tanggalLahir = data['Tanggal_Lahir'] ?? '-';
+        final tanggalLahir = data['Tanggal_Lahir'];
+        final parsedDobForDisplay = _toDate(tanggalLahir);
+        final tanggalLahirDisplay = parsedDobForDisplay != null
+          ? DateFormat('MM/dd/yyyy').format(parsedDobForDisplay)
+          : (tanggalLahir?.toString() ?? '-');
     final customerId = data['ID'] ?? 'N/A'; // Ambil ID dari Firestore
     final message = _generateMessage(name, tanggalLahir);
     final daysUntilBirthday = _getDaysUntilBirthday(tanggalLahir);
@@ -228,7 +258,7 @@ Terima kasih!''';
                   children: [
                     const Icon(Icons.cake, size: 20, color: Colors.black54),
                     const SizedBox(width: 6),
-                    Text(tanggalLahir, style: const TextStyle(fontSize: 14)),
+                        Text(tanggalLahirDisplay, style: const TextStyle(fontSize: 14)),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -236,11 +266,11 @@ Terima kasih!''';
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     // Tombol Edit tetap selalu muncul
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.grey),
-                      onPressed: () => _editMessage(name, phone, message),
-                      tooltip: 'Edit Pesan',
-                    ),
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.grey),
+                          onPressed: () => _editMessage(name, phone, message, tanggalLahir),
+                          tooltip: 'Edit Pesan',
+                        ),
                     const SizedBox(width: 4),
                     // Tombol WhatsApp dengan form hanya muncul ketika 6 hari sebelum ulang tahun
                     if (daysUntilBirthday == 6)
@@ -354,9 +384,9 @@ Terima kasih!''';
                   final nearestMonth = DateTime.now().month;
                   final nearestList = allDocs.where((data) {
                     try {
-                      final parts = data['Tanggal_Lahir'].split('/');
-                      final month = int.parse(parts[1]);
-                      return month == nearestMonth;
+                      final dob = _toDate(data['Tanggal_Lahir']);
+                      if (dob == null) return false;
+                      return dob.month == nearestMonth;
                     } catch (_) {
                       return false;
                     }
