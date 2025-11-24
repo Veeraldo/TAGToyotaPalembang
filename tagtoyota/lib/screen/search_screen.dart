@@ -52,8 +52,10 @@ class _SearchScreenState extends State<SearchScreen> {
     String baseMessage,
   ) async {
     try {
-      final formUrl =
-          GoogleFormHelper.generateFormUrl(customerId, customerName);
+      final formUrl = GoogleFormHelper.generateFormUrl(
+        customerId,
+        customerName,
+      );
 
       // Gabungkan pesan dengan link form
       final message = '''$baseMessage
@@ -78,58 +80,65 @@ Terima kasih!''';
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
       );
     }
   }
 
-  Future<void> _editMessage(String name, String phone, String oldMessage, dynamic tanggalLahir) async {
+  Future<void> _editMessage(
+    String name,
+    String phone,
+    String oldMessage,
+    dynamic tanggalLahir,
+  ) async {
     final controller = TextEditingController(text: oldMessage);
 
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Kirim Pesan untuk $name"),
-        content: TextField(
-          controller: controller,
-          maxLines: 4,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-            hintText: "Edit pesan sebelum dikirim...",
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Batal", style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            onPressed: () {
-              final msg = controller.text.trim();
-              Navigator.pop(context);
-              final includeForm = _getDaysUntilBirthday(tanggalLahir) == 6;
-              final fullMsg = includeForm
-                  ? msg +
-                      "\n\nSilakan isi form berikut untuk melanjutkan:\n" +
-                      GoogleFormHelper.generateFormUrl(name, name) +
-                      "\n\nID dan Nama Anda sudah terisi otomatis di form.\n\nTerima kasih!"
-                  : msg;
-              _openWhatsApp(phone, fullMsg);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Pesan dikirim ke WhatsApp"),
-                  backgroundColor: Colors.green,
+      builder:
+          (context) => AlertDialog(
+            title: Text("Kirim Pesan untuk $name"),
+            content: TextField(
+              controller: controller,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: "Edit pesan sebelum dikirim...",
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  "Batal",
+                  style: TextStyle(color: Colors.grey),
                 ),
-              );
-            },
-            child: const Text("Kirim"),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                onPressed: () {
+                  final msg = controller.text.trim();
+                  Navigator.pop(context);
+                  final includeForm = _getDaysUntilBirthday(tanggalLahir) == 6;
+                  final fullMsg =
+                      includeForm
+                          ? msg +
+                              "\n\nSilakan isi form berikut untuk melanjutkan:\n" +
+                              GoogleFormHelper.generateFormUrl(name, name) +
+                              "\n\nID dan Nama Anda sudah terisi otomatis di form.\n\nTerima kasih!"
+                          : msg;
+                  _openWhatsApp(phone, fullMsg);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Pesan dikirim ke WhatsApp"),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+                child: const Text("Kirim"),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -169,9 +178,10 @@ Terima kasih!''';
       final birthMonth = dob.month;
       final nextBirthday = DateTime(today.year, birthMonth, birthDay);
 
-      final birthday = nextBirthday.isBefore(today)
-          ? DateTime(today.year + 1, birthMonth, birthDay)
-          : nextBirthday;
+      final birthday =
+          nextBirthday.isBefore(today)
+              ? DateTime(today.year + 1, birthMonth, birthDay)
+              : nextBirthday;
 
       final diffDays = birthday.difference(today).inDays;
 
@@ -198,9 +208,10 @@ Terima kasih!''';
       final birthMonth = dob.month;
       final nextBirthday = DateTime(today.year, birthMonth, birthDay);
 
-      final birthday = nextBirthday.isBefore(today)
-          ? DateTime(today.year + 1, birthMonth, birthDay)
-          : nextBirthday;
+      final birthday =
+          nextBirthday.isBefore(today)
+              ? DateTime(today.year + 1, birthMonth, birthDay)
+              : nextBirthday;
 
       return birthday.difference(today).inDays;
     } catch (_) {
@@ -211,11 +222,12 @@ Terima kasih!''';
   Widget _buildCustomerCard(Map<String, dynamic> data) {
     final name = data['Customer_Name'] ?? '-';
     final phone = data['No_HP'] ?? '-';
-        final tanggalLahir = data['Tanggal_Lahir'];
-        final parsedDobForDisplay = _toDate(tanggalLahir);
-        final tanggalLahirDisplay = parsedDobForDisplay != null
-          ? DateFormat('MM/dd/yyyy').format(parsedDobForDisplay)
-          : (tanggalLahir?.toString() ?? '-');
+    final tanggalLahir = data['Tanggal_Lahir'];
+    final parsedDobForDisplay = _toDate(tanggalLahir);
+    final tanggalLahirDisplay =
+        parsedDobForDisplay != null
+            ? DateFormat('MM/dd/yyyy').format(parsedDobForDisplay)
+            : (tanggalLahir?.toString() ?? '-');
     final customerId = data['ID'] ?? 'N/A'; // Ambil ID dari Firestore
     final message = _generateMessage(name, tanggalLahir);
     final daysUntilBirthday = _getDaysUntilBirthday(tanggalLahir);
@@ -226,8 +238,10 @@ Terima kasih!''';
       elevation: 3,
       child: ExpansionTile(
         leading: const Icon(Icons.event, color: Colors.red),
-        title: Text(name,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        title: Text(
+          name,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
         trailing: const Icon(Icons.keyboard_arrow_down),
         children: [
           Padding(
@@ -240,17 +254,28 @@ Terima kasih!''';
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.directions_car,
-                            size: 20, color: Colors.black54),
+                        const Icon(
+                          Icons.directions_car,
+                          size: 20,
+                          color: Colors.black54,
+                        ),
                         const SizedBox(width: 6),
-                        Text("${data['Model'] ?? '-'}",
-                            style: const TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.w500)),
+                        Text(
+                          "${data['Model'] ?? '-'}",
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ],
                     ),
-                    Text("${data['Tanggal_Spk_Do'] ?? '-'}",
-                        style:
-                            const TextStyle(fontSize: 14, color: Colors.black54)),
+                    Text(
+                      "${data['Tanggal_Spk_Do'] ?? '-'}",
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black54,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -258,25 +283,96 @@ Terima kasih!''';
                   children: [
                     const Icon(Icons.cake, size: 20, color: Colors.black54),
                     const SizedBox(width: 6),
-                        Text(tanggalLahirDisplay, style: const TextStyle(fontSize: 14)),
+                    Text(
+                      tanggalLahirDisplay,
+                      style: const TextStyle(fontSize: 14),
+                    ),
                   ],
                 ),
+                if ((data['Hobby'] ?? '').toString().trim().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.sports_esports,
+                          size: 20,
+                          color: Colors.black54,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          "${data['Hobby']}",
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                if ((data['Makanan_Favorit'] ?? '')
+                    .toString()
+                    .trim()
+                    .isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.fastfood,
+                          size: 20,
+                          color: Colors.black54,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          "${data['Makanan_Favorit']}",
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
                 const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    // Tombol Edit tetap selalu muncul
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.grey),
-                          onPressed: () => _editMessage(name, phone, message, tanggalLahir),
-                          tooltip: 'Edit Pesan',
-                        ),
-                    const SizedBox(width: 4),
-                    // Tombol WhatsApp dengan form hanya muncul ketika 6 hari sebelum ulang tahun
-                    if (daysUntilBirthday == 6)
-                      IconButton(
-                        icon: const Icon(FontAwesomeIcons.whatsapp,
-                            color: Colors.green),
+                    FloatingActionButton.small(
+                      heroTag: null,
+                      backgroundColor: Colors.grey.shade700,
+                      tooltip: 'Edit Pesan',
+                      onPressed: () {
+                        final today = DateTime.now();
+                        final dob = _toDate(data['Tanggal_Lahir']);
+                        final birthDay = dob?.day ?? 1;
+                        final birthMonth = dob?.month ?? 1;
+                        final nextBirthday = DateTime(
+                          today.year,
+                          birthMonth,
+                          birthDay,
+                        );
+                        final includeForm =
+                            nextBirthday.difference(today).inDays == 6;
+                        _editMessage(name, phone, message, customerId);
+                      },
+                      child: const Icon(
+                        Icons.edit,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    if (() {
+                      final today = DateTime.now();
+                      final dob = _toDate(data['Tanggal_Lahir']);
+                      final birthDay = dob?.day ?? 1;
+                      final birthMonth = dob?.month ?? 1;
+                      final nextBirthday = DateTime(
+                        today.year,
+                        birthMonth,
+                        birthDay,
+                      );
+                      return nextBirthday.difference(today).inDays == 6;
+                    }())
+                      FloatingActionButton.small(
+                        heroTag: null,
+                        backgroundColor: const Color.fromARGB(255, 255, 17, 0),
+                        tooltip: 'Kirim ke WhatsApp dengan Form',
                         onPressed: () {
                           _sendWhatsAppWithForm(
                             name,
@@ -285,21 +381,42 @@ Terima kasih!''';
                             message,
                           );
                         },
-                        tooltip: 'Kirim Form ke WhatsApp',
+                        child: const Icon(
+                          FontAwesomeIcons.whatsapp,
+                          color: Colors.white,
+                          size: 22,
+                        ),
                       ),
-                    // Tombol WhatsApp normal (tanpa form) muncul ketika bukan 6 hari sebelum
-                    if (daysUntilBirthday != 6)
-                      IconButton(
-                        icon: const Icon(FontAwesomeIcons.whatsapp,
-                            color: Colors.green),
-                        onPressed: () => _openWhatsApp(phone, message),
+                    if (() {
+                      final today = DateTime.now();
+                      final dob = _toDate(data['Tanggal_Lahir']);
+                      final birthDay = dob?.day ?? 1;
+                      final birthMonth = dob?.month ?? 1;
+                      final nextBirthday = DateTime(
+                        today.year,
+                        birthMonth,
+                        birthDay,
+                      );
+                      return nextBirthday.difference(today).inDays != 6;
+                    }())
+                      FloatingActionButton.small(
+                        heroTag: null,
+                        backgroundColor: const Color.fromARGB(255, 255, 17, 0),
                         tooltip: 'Kirim Pesan ke WhatsApp',
+                        onPressed: () {
+                          _openWhatsApp(phone, message);
+                        },
+                        child: const Icon(
+                          FontAwesomeIcons.whatsapp,
+                          color: Colors.white,
+                          size: 22,
+                        ),
                       ),
                   ],
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -313,7 +430,6 @@ Terima kasih!''';
       body: SafeArea(
         child: Column(
           children: [
-            // 🔍 Search bar tetap aktif tanpa rebuild
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Row(
@@ -323,33 +439,35 @@ Terima kasih!''';
                       controller: _searchController,
                       decoration: InputDecoration(
                         hintText: 'Cari berdasarkan $_filter...',
-                        prefixIcon: const Icon(Icons.search, color: Colors.red),
+                        prefixIcon: const Icon(Icons.search, color: Color.fromARGB(255, 255, 17, 0)),
                         filled: true,
                         fillColor: Colors.grey[200],
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none),
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   PopupMenuButton<String>(
-                    icon: const Icon(Icons.filter_list, color: Colors.red),
+                    icon: const Icon(Icons.filter_list, color: Color.fromARGB(255, 255, 17, 0)),
                     onSelected: (val) {
                       setState(() => _filter = val);
                     },
-                    itemBuilder: (context) => const [
-                      PopupMenuItem(value: "nama", child: Text("Nama")),
-                      PopupMenuItem(
-                          value: "no_rangka", child: Text("Nomor Rangka")),
-                      PopupMenuItem(value: "model", child: Text("Model")),
-                    ],
+                    itemBuilder:
+                        (context) => const [
+                          PopupMenuItem(value: "nama", child: Text("Nama")),
+                          PopupMenuItem(
+                            value: "no_rangka",
+                            child: Text("Nomor Rangka"),
+                          ),
+                          PopupMenuItem(value: "model", child: Text("Model")),
+                        ],
                   ),
                 ],
               ),
             ),
-
-            // 🔽 Daftar hasil pencarian & nearest date
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
                 stream: _getCustomerStream(),
@@ -359,64 +477,96 @@ Terima kasih!''';
                   }
 
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Center(child: Text("Tidak ada data pelanggan."));
+                    return const Center(
+                      child: Text("Tidak ada data pelanggan."),
+                    );
                   }
 
-                  final allDocs = snapshot.data!.docs
-                      .map((e) => e.data() as Map<String, dynamic>)
-                      .toList();
+                  final allDocs =
+                      snapshot.data!.docs
+                          .map((e) => e.data() as Map<String, dynamic>)
+                          .toList();
 
-                  final searchResults = _searchText.isEmpty
-                      ? []
-                      : allDocs.where((data) {
-                          final name =
-                              (data['Customer_Name'] ?? '').toString().toLowerCase();
-                          final model =
-                              (data['Model'] ?? '').toString().toLowerCase();
-                          final noRangka =
-                              (data['No_Rangka'] ?? '').toString().toLowerCase();
+                  final searchResults =
+                      _searchText.isEmpty
+                          ? []
+                          : allDocs.where((data) {
+                            final name =
+                                (data['Customer_Name'] ?? '')
+                                    .toString()
+                                    .toLowerCase();
+                            final model =
+                                (data['Model'] ?? '').toString().toLowerCase();
+                            final noRangka =
+                                (data['No_Rangka'] ?? '')
+                                    .toString()
+                                    .toLowerCase();
 
-                          if (_filter == "nama") return name.contains(_searchText);
-                          if (_filter == "model") return model.contains(_searchText);
-                          return noRangka.contains(_searchText);
-                        }).toList();
+                            if (_filter == "nama")
+                              return name.contains(_searchText);
+                            if (_filter == "model")
+                              return model.contains(_searchText);
+                            return noRangka.contains(_searchText);
+                          }).toList();
 
                   final nearestMonth = DateTime.now().month;
-                  final nearestList = allDocs.where((data) {
-                    try {
-                      final dob = _toDate(data['Tanggal_Lahir']);
-                      if (dob == null) return false;
-                      return dob.month == nearestMonth;
-                    } catch (_) {
-                      return false;
-                    }
-                  }).toList();
+                  final nearestList =
+                      allDocs.where((data) {
+                        try {
+                          final spkDo = data['Tanggal_Spk_Do'];
+                          final dtSpk = _toDate(spkDo);
+                          print(
+                            'DEBUG: ${data['Customer_Name']} - Tanggal_Spk_Do: $spkDo -> Parsed: $dtSpk',
+                          );
+                          if (dtSpk == null) return false;
+                          return dtSpk.month == nearestMonth;
+                        } catch (_) {
+                          return false;
+                        }
+                      }).toList();
 
                   return ListView(
                     padding: const EdgeInsets.only(bottom: 12),
                     children: [
                       if (_searchText.isNotEmpty) ...[
                         const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                          child: Text("Hasil Pencarian",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 16)),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
+                          child: Text(
+                            "Hasil Pencarian",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
                         ),
                         if (searchResults.isEmpty)
                           const Padding(
                             padding: EdgeInsets.all(16.0),
-                            child: Center(child: Text("Tidak ada hasil ditemukan.")),
+                            child: Center(
+                              child: Text("Tidak ada hasil ditemukan."),
+                            ),
                           )
                         else
-                          ...searchResults.map((data) => _buildCustomerCard(data)).toList(),
+                          ...searchResults
+                              .map((data) => _buildCustomerCard(data))
+                              .toList(),
                       ],
                       const SizedBox(height: 12),
                       Padding(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 4),
-                        child: Text("Nearest Date $monthNow",
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16)),
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        child: Text(
+                          "Nearest Date $monthNow",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
                       ),
                       ...nearestList.map(_buildCustomerCard),
                     ],

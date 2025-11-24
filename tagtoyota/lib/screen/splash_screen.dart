@@ -98,7 +98,7 @@ class _SplashScreenState extends State<SplashScreen>
                       widthFactor: _animation.value,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFE0000), 
+                          color: const Color.fromARGB(255, 255, 0, 0), 
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),

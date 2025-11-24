@@ -49,7 +49,7 @@ class SettingsScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Batal", style: TextStyle(color: Colors.red)),
+            child: const Text("Batal", style: TextStyle(color: Color.fromARGB(255, 255, 17, 0))),
           ),
         ],
       ),
@@ -74,7 +74,7 @@ class SettingsScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
             ),
             child: ListTile(
-              leading: const Icon(Icons.info_outline, color: Colors.red),
+              leading: const Icon(Icons.info_outline, color: Color.fromARGB(255, 255, 17, 0)),
               title: const Text(
                 "Tentang Aplikasi",
                 style: TextStyle(fontWeight: FontWeight.w500),

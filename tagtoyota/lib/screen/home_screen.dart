@@ -27,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late String greeting;
 
   final Map<String, String> _customMessages = {};
+  int? _expandedIndex;
 
   @override
   void initState() {
@@ -603,7 +604,6 @@ Terima kasih!''';
                                             ],
                                           ),
                                         ),
-                                      // Tambahkan ini untuk menampilkan Makanan Favorit jika terisi
                                       if ((event['Makanan_Favorit'] ?? '')
                                           .toString()
                                           .trim()
@@ -689,7 +689,7 @@ Terima kasih!''';
                                               6)
                                             FloatingActionButton.small(
                                               heroTag: null,
-                                              backgroundColor: Colors.red,
+                                              backgroundColor: const Color.fromARGB(255, 255, 17, 0),
                                               tooltip:
                                                   'Kirim Pesan ke WhatsApp',
                                               onPressed: () {
