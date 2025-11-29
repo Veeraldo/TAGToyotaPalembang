@@ -15,10 +15,17 @@ class BackgroundNotificationService {
 
     tz.initializeTimeZones();
 
+    // Request permissions menggunakan flutter_local_notifications
+    await _requestPermissions();
+
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',
     );
-    const iosSettings = DarwinInitializationSettings();
+    const iosSettings = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
     const initSettings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
@@ -43,6 +50,36 @@ class BackgroundNotificationService {
 
     _initialized = true;
     print('Notification service initialized');
+  }
+
+  /// Request notification permissions
+  static Future<void> _requestPermissions() async {
+    final androidImplementation = _notifications
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+
+    if (androidImplementation != null) {
+      // Request notification permission (Android 13+)
+      final granted = await androidImplementation.requestNotificationsPermission();
+      print('Notification permission granted: $granted');
+
+      // Request exact alarm permission (Android 12+)
+      final exactAlarmGranted = await androidImplementation.requestExactAlarmsPermission();
+      print('Exact alarm permission granted: $exactAlarmGranted');
+    }
+
+    // Request iOS permissions
+    final iosImplementation = _notifications
+        .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>();
+
+    if (iosImplementation != null) {
+      await iosImplementation.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    }
   }
 
   static Future<void> registerPeriodicTask() async {
