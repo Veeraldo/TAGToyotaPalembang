@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tagtoyota/screen/ManualCustomer_screen.dart';
 import 'package:tagtoyota/screen/customer_data_screen.dart';
 import 'package:tagtoyota/screen/signin_screen.dart';
+import 'package:tagtoyota/helper/background_notification_service.dart';
 import 'setting_screen.dart';
 import 'package:image/image.dart' as img;
 
@@ -31,10 +32,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadProfilePhoto() async {
     if (user == null) return;
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user!.uid)
-          .get();
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user!.uid)
+              .get();
 
       setState(() {
         _photoBase64 = doc.data()?['photoBase64'];
@@ -46,8 +48,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _pickAndSaveImage() async {
     try {
-      final pickedFile =
-          await ImagePicker().pickImage(source: ImageSource.gallery);
+      final pickedFile = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+      );
       if (pickedFile == null || user == null) return;
 
       final file = File(pickedFile.path);
@@ -61,10 +64,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final resizedBytes = img.encodeJpg(resized, quality: 85);
       final base64Image = base64Encode(resizedBytes);
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user!.uid)
-          .set({'photoBase64': base64Image}, SetOptions(merge: true));
+      await FirebaseFirestore.instance.collection('users').doc(user!.uid).set({
+        'photoBase64': base64Image,
+      }, SetOptions(merge: true));
 
       setState(() {
         _photoBase64 = base64Image;
@@ -76,9 +78,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     } catch (e) {
       debugPrint("Error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal memperbarui foto')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal memperbarui foto')));
     }
   }
 
@@ -150,38 +152,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildMenuItem(Icons.people, "Isi Data Customer", () {
               showModalBottomSheet(
                 context: context,
-                builder: (ctx) => Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.edit),
-                      title: const Text('Input Manual'),
-                      onTap: () {
-                        Navigator.pop(ctx);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const ManualCustomerScreen(),
-                          ),
-                        );
-                      },
+                builder:
+                    (ctx) => Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.edit),
+                          title: const Text('Input Manual'),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ManualCustomerScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.upload_file),
+                          title: const Text('Import Excel'),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const CustomerDataScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                     ),
-                    ListTile(
-                      leading: const Icon(Icons.upload_file),
-                      title: const Text('Import Excel'),
-                      onTap: () {
-                        Navigator.pop(ctx);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const CustomerDataScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
               );
             }),
             const SizedBox(height: 40),
