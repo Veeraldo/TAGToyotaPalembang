@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Service untuk mengelola notifikasi otomatis
 class BackgroundNotificationService {
@@ -162,6 +163,45 @@ class BackgroundNotificationService {
   static Future<void> cancelAllTasks() async {
     await _notifications.cancelAll();
     print('All notifications cancelled');
+  }
+
+  /// Enable daily notifications (Subscribe)
+  static Future<bool> enableDailyNotifications() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('daily_notifications_enabled', true);
+      await registerPeriodicTask();
+      print('Daily notifications enabled');
+      return true;
+    } catch (e) {
+      print('Error enabling notifications: $e');
+      return false;
+    }
+  }
+
+  /// Disable daily notifications (Unsubscribe)
+  static Future<bool> disableDailyNotifications() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('daily_notifications_enabled', false);
+      await cancelAllTasks();
+      print('Daily notifications disabled');
+      return true;
+    } catch (e) {
+      print('Error disabling notifications: $e');
+      return false;
+    }
+  }
+
+  /// Check if daily notifications are enabled
+  static Future<bool> isDailyNotificationsEnabled() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool('daily_notifications_enabled') ?? false;
+    } catch (e) {
+      print('Error checking notification status: $e');
+      return false;
+    }
   }
 }
 

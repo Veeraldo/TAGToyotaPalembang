@@ -22,11 +22,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
   File? _imageFile;
   String? _photoBase64;
   final user = FirebaseAuth.instance.currentUser;
+  bool _notificationsEnabled = false;
+  bool _isLoadingNotification = true;
 
   @override
   void initState() {
     super.initState();
     _loadProfilePhoto();
+    _loadNotificationStatus();
+  }
+
+  Future<void> _loadNotificationStatus() async {
+    final enabled = await BackgroundNotificationService.isDailyNotificationsEnabled();
+    setState(() {
+      _notificationsEnabled = enabled;
+      _isLoadingNotification = false;
+    });
   }
 
   Future<void> _loadProfilePhoto() async {
@@ -99,6 +110,71 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Icon(Icons.error, color: Colors.white),
               SizedBox(width: 12),
               Text('Gagal memperbarui foto'),
+            ],
+          ),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _toggleNotifications(bool value) async {
+    setState(() => _isLoadingNotification = true);
+
+    bool success;
+    if (value) {
+      success = await BackgroundNotificationService.enableDailyNotifications();
+    } else {
+      success = await BackgroundNotificationService.disableDailyNotifications();
+    }
+
+    if (!mounted) return;
+
+    if (success) {
+      setState(() {
+        _notificationsEnabled = value;
+        _isLoadingNotification = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                value ? Icons.notifications_active : Icons.notifications_off,
+                color: Colors.white,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  value
+                      ? 'Notifikasi jam 8 pagi diaktifkan!\nAnda akan menerima pengingat ulang tahun customer setiap hari.'
+                      : 'Notifikasi jam 8 pagi dinonaktifkan',
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: value ? Colors.green.shade600 : Colors.orange.shade600,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    } else {
+      setState(() => _isLoadingNotification = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 12),
+              Text('Gagal mengubah pengaturan notifikasi'),
             ],
           ),
           backgroundColor: Colors.red.shade600,
@@ -331,6 +407,109 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       );
                     },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Notification Subscription Toggle
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          _notificationsEnabled
+                              ? Colors.green.shade50
+                              : Colors.orange.shade50,
+                          _notificationsEnabled
+                              ? Colors.green.shade100
+                              : Colors.orange.shade100,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: _notificationsEnabled
+                            ? Colors.green.shade200
+                            : Colors.orange.shade200,
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: _notificationsEnabled
+                                  ? Colors.green.withOpacity(0.2)
+                                  : Colors.orange.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              _notificationsEnabled
+                                  ? Icons.notifications_active
+                                  : Icons.notifications_off,
+                              color: _notificationsEnabled
+                                  ? Colors.green
+                                  : Colors.orange,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Pengingat Harian",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _notificationsEnabled
+                                      ? "Aktif - Notifikasi jam 8 pagi"
+                                      : "Nonaktif",
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: _notificationsEnabled
+                                        ? Colors.green.shade700
+                                        : Colors.orange.shade700,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (_isLoadingNotification)
+                            const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          else
+                            Switch(
+                              value: _notificationsEnabled,
+                              onChanged: _toggleNotifications,
+                              activeColor: Colors.green.shade600,
+                              inactiveThumbColor: Colors.orange.shade400,
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
 
                   const SizedBox(height: 12),
