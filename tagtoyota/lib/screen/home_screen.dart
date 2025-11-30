@@ -33,7 +33,13 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _updateGreeting();
-    Future.delayed(const Duration(seconds: 1), _showPopup);
+    Future.delayed(const Duration(seconds: 1), () async {
+      await _showPopup();
+      if (mounted) {
+        await Future.delayed(const Duration(milliseconds: 2000));
+        _showCompanyProfilePopup();
+      }
+    });
   }
 
   Future<void> _openWhatsApp(String phone, String message) async {
@@ -198,28 +204,597 @@ Terima kasih!''';
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder:
-          (context) => AlertDialog(
-            backgroundColor: Colors.white.withOpacity(0.95),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+          (context) => Dialog(
+            backgroundColor: Colors.transparent,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.red.shade600,
+                    Colors.red.shade800,
+                    Colors.black87,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.red.withOpacity(0.5),
+                    blurRadius: 20,
+                    spreadRadius: 5,
+                  ),
+                ],
+              ),
+              child: Stack(
+                children: [
+                  // Decorative circles
+                  Positioned(
+                    top: -50,
+                    right: -50,
+                    child: Container(
+                      width: 150,
+                      height: 150,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.1),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: -30,
+                    left: -30,
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.1),
+                      ),
+                    ),
+                  ),
+                  // Main content
+                  Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Toyota logo or icon
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.emoji_emotions,
+                            size: 48,
+                            color: Colors.red,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        // Greeting text
+                        Text(
+                          "$greeting,",
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w300,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          username,
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Wave emoji
+                        const Text("👋", style: TextStyle(fontSize: 32)),
+                        const SizedBox(height: 20),
+                        // Divider
+                        Container(
+                          width: 60,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        // Quote
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              const Icon(
+                                Icons.format_quote,
+                                color: Colors.white70,
+                                size: 24,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                quote,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontStyle: FontStyle.italic,
+                                  color: Colors.white,
+                                  height: 1.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        // Close button
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.red.shade700,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            elevation: 5,
+                          ),
+                          child: const Text(
+                            "Mari Mulai!",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-            title: Text(
-              "$greeting, $username 👋",
-              style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+    );
+  }
+
+  Future<void> _showCompanyProfilePopup() async {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxHeight: 600),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white,
+                Colors.grey.shade50,
+              ],
             ),
-            content: Text(
-              quote,
-              style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("Tutup", style: TextStyle(color: Colors.red)),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 20,
+                spreadRadius: 5,
               ),
             ],
           ),
+          child: Stack(
+            children: [
+              // Decorative circles
+              Positioned(
+                top: -50,
+                right: -50,
+                child: Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.red.withOpacity(0.1),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: -30,
+                left: -30,
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.red.withOpacity(0.05),
+                  ),
+                ),
+              ),
+              // Main content
+              SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Logo/Icon
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.red.shade600,
+                              Colors.red.shade800,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.red.withOpacity(0.3),
+                              blurRadius: 15,
+                              spreadRadius: 3,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.car_rental,
+                          size: 48,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      
+                      // Title
+                      const Text(
+                        "PT TUNAS AUTO GRAHA",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          "Dealer Resmi Toyota",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.red.shade700,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Divider
+                      Container(
+                        width: 60,
+                        height: 3,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.red.shade400,
+                              Colors.red.shade700,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Sejarah Section
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.grey.shade200,
+                            width: 1,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.history,
+                                    color: Colors.blue.shade600,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  "SEJARAH",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              "PT Tunas Auto Graha (TAG) didirikan pada tanggal 8 Februari 2000 oleh Bapak Setiawan Hartono dan Bapak Saibun Hartono di Sumatera Selatan sebagai dealer resmi Toyota. Dengan visi untuk memberikan layanan otomotif terbaik, keduanya berkomitmen untuk menghadirkan kualitas tinggi dalam penjualan dan layanan purna jual kendaraan Toyota.",
+                              textAlign: TextAlign.justify,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade700,
+                                height: 1.6,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              "Seiring berjalannya waktu, TAG terus berkembang dengan memperluas fasilitas dan jaringan, serta meningkatkan standar pelayanan pelanggan. Berkat dedikasi tinggi terhadap kualitas dan kepuasan pelanggan, TAG kini dikenal sebagai salah satu dealer Toyota terkemuka di Sumatera Selatan.",
+                              textAlign: TextAlign.justify,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade700,
+                                height: 1.6,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Visi Section
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.red.shade50,
+                              Colors.red.shade100,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.red.shade200,
+                            width: 1,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.visibility,
+                                    color: Colors.red.shade600,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  "VISI",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              "Menjadi dealer otomotif terbaik dalam proses pelayanan terhadap pelanggan",
+                              textAlign: TextAlign.justify,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.red.shade900,
+                                height: 1.6,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Misi Section
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.grey.shade200,
+                            width: 1,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.flag,
+                                    color: Colors.orange.shade600,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  "MISI",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            _buildMissionItem(
+                              "01",
+                              "Memberikan perhatian lebih terhadap pelanggan baik dari sisi fasilitas maupun pelayanan",
+                              Colors.blue,
+                            ),
+                            const SizedBox(height: 8),
+                            _buildMissionItem(
+                              "02",
+                              "Menyediakan segala fleksibilitas terhadap pembelian dan purna jual",
+                              Colors.green,
+                            ),
+                            const SizedBox(height: 8),
+                            _buildMissionItem(
+                              "03",
+                              "Memberikan kemudahan, kenyamanan dan keamanan bagi pelanggan untuk mendapatkan solusi terbaik dalam otomotif",
+                              Colors.purple,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Close button
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade600,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 40,
+                            vertical: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          elevation: 5,
+                        ),
+                        child: const Text(
+                          "Tutup",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
+  }
+
+  Widget _buildMissionItem(String number, String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              number,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              textAlign: TextAlign.justify,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade700,
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openCompanyProfile() async {
+    const url = 'https://www.tunasautograha.co.id/';
+    if (!await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication)) {
+      throw Exception('Tidak dapat membuka profil perusahaan');
+    }
   }
 
   Widget _buildBottomNav(List<IconData> icons, List<String> labels) {
@@ -363,6 +938,11 @@ Terima kasih!''';
         }
 
         final docs = snapshot.data!.docs;
+
+        // Count today's birthdays
+        int todayBirthdayCount = 0;
+        DateTime today = DateTime.now();
+
         Map<DateTime, List<Map<String, dynamic>>> fullEvents = {};
         for (var doc in docs) {
           final data = Map<String, dynamic>.from(
@@ -377,6 +957,12 @@ Terima kasih!''';
               final month = int.parse(parts[1]);
               final year = int.parse(parts[2]);
               final date = DateTime(year, month, day);
+
+              // Count today's birthdays
+              if (day == today.day && month == today.month) {
+                todayBirthdayCount++;
+              }
+
               fullEvents.putIfAbsent(date, () => []);
               fullEvents[date]!.add(data);
             } catch (_) {}
@@ -401,12 +987,57 @@ Terima kasih!''';
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                Text(
-                  "$greeting, $username",
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
+                // Stats Card
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.red.shade600, Colors.red.shade800],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.red.withOpacity(0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        "$greeting, $username",
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Divider(color: Colors.white24),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatCard(
+                              icon: Icons.people,
+                              label: 'Total Customer',
+                              value: '${docs.length}',
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildStatCard(
+                              icon: Icons.cake,
+                              label: 'Ulang Tahun Hari Ini',
+                              value: '$todayBirthdayCount',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -430,8 +1061,7 @@ Terima kasih!''';
                               entry.key.month == day.month,
                         )
                         .expand(
-                          (entry) =>
-                              entry.value.map((e) => e['Customer_Name'] ?? ''),
+                          (entry) => entry.value.map((e) => e['Customer_Name'] ?? ''),
                         )
                         .toList();
                   },
@@ -453,7 +1083,7 @@ Terima kasih!''';
                   ),
                   calendarStyle: const CalendarStyle(
                     todayDecoration: BoxDecoration(
-                      color: Colors.black,
+                      color: Color.fromARGB(255, 58, 58, 58),
                       shape: BoxShape.circle,
                     ),
                     selectedDecoration: BoxDecoration(
@@ -505,214 +1135,554 @@ Terima kasih!''';
                                 "Hai ${event['Customer_Name']}, saya $username dari PT TAG Toyota Palembang ingin menyapa pelanggan terbaik kami.";
                           }
 
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 6),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: ExpansionTile(
-                              leading: const Icon(
-                                Icons.event,
-                                color: Colors.red,
-                              ),
-                              title: Text(
-                                "${event['Customer_Name']}",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.08),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
                                 ),
-                              ),
-                              trailing: const Icon(Icons.keyboard_arrow_down),
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
+                              ],
+                            ),
+                            child: Theme(
+                              data: Theme.of(
+                                context,
+                              ).copyWith(dividerColor: Colors.transparent),
+                              child: ExpansionTile(
+                                tilePadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                leading: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.red.shade400,
+                                        Colors.red.shade600,
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.red.withOpacity(0.3),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                  child: const Icon(
+                                    Icons.person,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
+                                title: Text(
+                                  "${event['Customer_Name']}",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                subtitle: Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Row(
                                     children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              const Icon(
-                                                Icons.directions_car,
-                                                size: 20,
-                                                color: Colors.black54,
-                                              ),
-                                              const SizedBox(width: 6),
-                                              Text(
-                                                "${event['Model'] ?? '-'}",
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          Text(
-                                            "${event['Tanggal_Spk_Do'] ?? '-'}",
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.black54,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.cake,
-                                            size: 20,
-                                            color: Colors.black54,
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            "${event['Tanggal_Lahir'] ?? '-'}",
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      if ((event['Hobby'] ?? '')
-                                          .toString()
-                                          .trim()
-                                          .isNotEmpty)
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            top: 4,
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              const Icon(
-                                                Icons.sports_esports,
-                                                size: 20,
-                                                color: Colors.black54,
-                                              ),
-                                              const SizedBox(width: 6),
-                                              Text(
-                                                "${event['Hobby']}",
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ],
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red.shade50,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
                                           ),
                                         ),
-                                      if ((event['Makanan_Favorit'] ?? '')
-                                          .toString()
-                                          .trim()
-                                          .isNotEmpty)
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            top: 4,
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              const Icon(
-                                                Icons.fastfood,
-                                                size: 20,
-                                                color: Colors.black54,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.cake,
+                                              size: 14,
+                                              color: Colors.red.shade600,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              "${event['Tanggal_Lahir']}",
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.red.shade700,
+                                                fontWeight: FontWeight.w600,
                                               ),
-                                              const SizedBox(width: 6),
-                                              Text(
-                                                "${event['Makanan_Favorit']}",
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
+                                            ),
+                                          ],
                                         ),
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          FloatingActionButton.small(
-                                            heroTag: null,
-                                            backgroundColor:
-                                                Colors.grey.shade700,
-                                            tooltip: 'Edit Pesan',
-                                            onPressed: () {
-                                              final includeForm =
-                                                  nextBirthday
-                                                      .difference(today)
-                                                      .inDays ==
-                                                  6;
-                                              _editMessage(
-                                                event['Customer_Name'],
-                                                phone,
-                                                message,
-                                                customerId,
-                                                includeForm: includeForm,
-                                              );
-                                            },
-                                            child: const Icon(
-                                              Icons.edit,
-                                              color: Colors.white,
-                                              size: 20,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 10),
-                                          if (nextBirthday
-                                                  .difference(today)
-                                                  .inDays ==
-                                              6)
-                                            FloatingActionButton.small(
-                                              heroTag: null,
-                                              backgroundColor: Colors.red,
-                                              tooltip:
-                                                  'Kirim ke WhatsApp dengan Form',
-                                              onPressed: () {
-                                                _sendWhatsAppWithForm(
-                                                  event['Customer_Name'],
-                                                  customerId,
-                                                  phone,
-                                                  message,
-                                                );
-                                              },
-                                              child: const Icon(
-                                                FontAwesomeIcons.whatsapp,
-                                                color: Colors.white,
-                                                size: 22,
-                                              ),
-                                            ),
-                                          if (nextBirthday
-                                                  .difference(today)
-                                                  .inDays !=
-                                              6)
-                                            FloatingActionButton.small(
-                                              heroTag: null,
-                                              backgroundColor:
-                                                  const Color.fromARGB(
-                                                    255,
-                                                    255,
-                                                    17,
-                                                    0,
-                                                  ),
-                                              tooltip:
-                                                  'Kirim Pesan ke WhatsApp',
-                                              onPressed: () {
-                                                _openWhatsApp(phone, message);
-                                              },
-                                              child: const Icon(
-                                                FontAwesomeIcons.whatsapp,
-                                                color: Colors.white,
-                                                size: 22,
-                                              ),
-                                            ),
-                                        ],
                                       ),
                                     ],
                                   ),
                                 ),
-                              ],
+                                trailing: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade100,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.keyboard_arrow_down,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Colors.grey.shade50,
+                                          Colors.white,
+                                        ],
+                                      ),
+                                      borderRadius: const BorderRadius.only(
+                                        bottomLeft: Radius.circular(16),
+                                        bottomRight: Radius.circular(16),
+                                      ),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          // Header divider
+                                          Container(
+                                            width: 40,
+                                            height: 4,
+                                            decoration: BoxDecoration(
+                                              color: Colors.red.shade300,
+                                              borderRadius:
+                                                  BorderRadius.circular(2),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 16),
+
+                                          // Model & Tanggal SPK
+                                          Container(
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: Colors.grey.shade200,
+                                                width: 1,
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Expanded(
+                                                  child: Row(
+                                                    children: [
+                                                      Container(
+                                                        padding:
+                                                            const EdgeInsets.all(
+                                                              8,
+                                                            ),
+                                                        decoration: BoxDecoration(
+                                                          color:
+                                                              Colors
+                                                                  .blue
+                                                                  .shade50,
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                        ),
+                                                        child: Icon(
+                                                          Icons.directions_car,
+                                                          size: 20,
+                                                          color:
+                                                              Colors
+                                                                  .blue
+                                                                  .shade600,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      Expanded(
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Text(
+                                                              "Model",
+                                                              style: TextStyle(
+                                                                fontSize: 11,
+                                                                color:
+                                                                    Colors
+                                                                        .grey
+                                                                        .shade600,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w500,
+                                                              ),
+                                                            ),
+                                                            const SizedBox(
+                                                              height: 2,
+                                                            ),
+                                                            Text(
+                                                              "${event['Model'] ?? '-'}",
+                                                              style: const TextStyle(
+                                                                fontSize: 14,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                color:
+                                                                    Colors
+                                                                        .black87,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 6,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        Colors.orange.shade50,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
+                                                  ),
+                                                  child: Column(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.calendar_today,
+                                                        size: 14,
+                                                        color:
+                                                            Colors
+                                                                .orange
+                                                                .shade700,
+                                                      ),
+                                                      const SizedBox(height: 2),
+                                                      Text(
+                                                        "${event['Tanggal_Spk_Do'] ?? '-'}",
+                                                        style: TextStyle(
+                                                          fontSize: 11,
+                                                          color:
+                                                              Colors
+                                                                  .orange
+                                                                  .shade700,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+
+                                          // Hobby
+                                          if ((event['Hobby'] ?? '')
+                                              .toString()
+                                              .trim()
+                                              .isNotEmpty) ...[
+                                            const SizedBox(height: 12),
+                                            Container(
+                                              padding: const EdgeInsets.all(12),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                border: Border.all(
+                                                  color: Colors.grey.shade200,
+                                                  width: 1,
+                                                ),
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.all(8),
+                                                    decoration: BoxDecoration(
+                                                      color:
+                                                          Colors.purple.shade50,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            8,
+                                                          ),
+                                                    ),
+                                                    child: Icon(
+                                                      Icons.sports_esports,
+                                                      size: 20,
+                                                      color:
+                                                          Colors
+                                                              .purple
+                                                              .shade600,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          "Hobi",
+                                                          style: TextStyle(
+                                                            fontSize: 11,
+                                                            color:
+                                                                Colors
+                                                                    .grey
+                                                                    .shade600,
+                                                            fontWeight:
+                                                                FontWeight.w500,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 2,
+                                                        ),
+                                                        Text(
+                                                          "${event['Hobby']}",
+                                                          style: const TextStyle(
+                                                            fontSize: 14,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            color:
+                                                                Colors.black87,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+
+                                          // Makanan Favorit (if exists)
+                                          if ((event['Makanan_Favorit'] ?? '')
+                                              .toString()
+                                              .trim()
+                                              .isNotEmpty) ...[
+                                            const SizedBox(height: 12),
+                                            Container(
+                                              padding: const EdgeInsets.all(12),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                border: Border.all(
+                                                  color: Colors.grey.shade200,
+                                                  width: 1,
+                                                ),
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.all(8),
+                                                    decoration: BoxDecoration(
+                                                      color:
+                                                          Colors.green.shade50,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            8,
+                                                          ),
+                                                    ),
+                                                    child: Icon(
+                                                      Icons.fastfood,
+                                                      size: 20,
+                                                      color:
+                                                          Colors.green.shade600,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          "Makanan Favorit",
+                                                          style: TextStyle(
+                                                            fontSize: 11,
+                                                            color:
+                                                                Colors
+                                                                    .grey
+                                                                    .shade600,
+                                                            fontWeight:
+                                                                FontWeight.w500,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 2,
+                                                        ),
+                                                        Text(
+                                                          "${event['Makanan_Favorit']}",
+                                                          style: const TextStyle(
+                                                            fontSize: 14,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            color:
+                                                                Colors.black87,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+
+                                          const SizedBox(height: 16),
+
+                                          // Action buttons
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            children: [
+                                              ElevatedButton.icon(
+                                                onPressed: () {
+                                                  final includeForm =
+                                                      nextBirthday
+                                                          .difference(today)
+                                                          .inDays ==
+                                                      6;
+                                                  _editMessage(
+                                                    event['Customer_Name'],
+                                                    phone,
+                                                    message,
+                                                    customerId,
+                                                    includeForm: includeForm,
+                                                  );
+                                                },
+                                                icon: const Icon(
+                                                  Icons.edit,
+                                                  size: 18,
+                                                ),
+                                                label: const Text('Edit'),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor:
+                                                      Colors.grey.shade700,
+                                                  foregroundColor: Colors.white,
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 16,
+                                                        vertical: 10,
+                                                      ),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          10,
+                                                        ),
+                                                  ),
+                                                  elevation: 2,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              if (nextBirthday
+                                                      .difference(today)
+                                                      .inDays ==
+                                                  6)
+                                                ElevatedButton.icon(
+                                                  onPressed: () {
+                                                    _sendWhatsAppWithForm(
+                                                      event['Customer_Name'],
+                                                      customerId,
+                                                      phone,
+                                                      message,
+                                                    );
+                                                  },
+                                                  icon: const Icon(
+                                                    FontAwesomeIcons.whatsapp,
+                                                    size: 18,
+                                                  ),
+                                                  label: const Text('Form'),
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        const Color(0xFF25D366),
+                                                    foregroundColor:
+                                                        Colors.white,
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 16,
+                                                          vertical: 10,
+                                                        ),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            10,
+                                                          ),
+                                                    ),
+                                                    elevation: 2,
+                                                  ),
+                                                )
+                                              else
+                                                ElevatedButton.icon(
+                                                  onPressed: () {
+                                                    _openWhatsApp(
+                                                      phone,
+                                                      message,
+                                                    );
+                                                  },
+                                                  icon: const Icon(
+                                                    FontAwesomeIcons.whatsapp,
+                                                    size: 18,
+                                                  ),
+                                                  label: const Text('WhatsApp'),
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        const Color(0xFF25D366),
+                                                    foregroundColor:
+                                                        Colors.white,
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 16,
+                                                          vertical: 10,
+                                                        ),
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            10,
+                                                          ),
+                                                    ),
+                                                    elevation: 2,
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           );
                         }).toList(),
@@ -732,4 +1702,38 @@ Terima kasih!''';
       },
     );
   }
+}
+
+Widget _buildStatCard({
+  required IconData icon,
+  required String label,
+  required String value,
+}) {
+  return Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: Colors.white.withOpacity(0.2),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Column(
+      children: [
+        Icon(icon, color: Colors.white, size: 24),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 11, color: Colors.white70),
+        ),
+      ],
+    ),
+  );
 }

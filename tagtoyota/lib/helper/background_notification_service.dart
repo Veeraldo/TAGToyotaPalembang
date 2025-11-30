@@ -14,6 +14,7 @@ class BackgroundNotificationService {
     if (_initialized) return;
 
     tz.initializeTimeZones();
+    tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
 
     // Request permissions menggunakan flutter_local_notifications
     await _requestPermissions();
@@ -54,24 +55,30 @@ class BackgroundNotificationService {
 
   /// Request notification permissions
   static Future<void> _requestPermissions() async {
-    final androidImplementation = _notifications
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    final androidImplementation =
+        _notifications
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
 
     if (androidImplementation != null) {
       // Request notification permission (Android 13+)
-      final granted = await androidImplementation.requestNotificationsPermission();
+      final granted =
+          await androidImplementation.requestNotificationsPermission();
       print('Notification permission granted: $granted');
 
       // Request exact alarm permission (Android 12+)
-      final exactAlarmGranted = await androidImplementation.requestExactAlarmsPermission();
+      final exactAlarmGranted =
+          await androidImplementation.requestExactAlarmsPermission();
       print('Exact alarm permission granted: $exactAlarmGranted');
     }
 
     // Request iOS permissions
-    final iosImplementation = _notifications
-        .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>();
+    final iosImplementation =
+        _notifications
+            .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin
+            >();
 
     if (iosImplementation != null) {
       await iosImplementation.requestPermissions(
@@ -99,7 +106,7 @@ class BackgroundNotificationService {
         now.year,
         now.month,
         now.day,
-        8, 
+        8,
         0,
       );
 
@@ -107,6 +114,30 @@ class BackgroundNotificationService {
       if (scheduledDate.isBefore(now)) {
         scheduledDate = scheduledDate.add(const Duration(days: 1));
       }
+
+      const androidDetails = AndroidNotificationDetails(
+        'birthday_reminders',
+        'Birthday Reminders',
+        channelDescription: 'Notifikasi pengingat ulang tahun customer',
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+      );
+
+      const notificationDetails = NotificationDetails(android: androidDetails);
+      
+      await _notifications.zonedSchedule(
+        999, // ID unik untuk daily check
+        'Birthday Check',
+        'Checking birthdays...',
+        scheduledDate,
+        notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents:
+            DateTimeComponents.time, // Ulangi setiap hari pada waktu yang sama
+      );
 
       await checkBirthdayReminders();
 
@@ -138,7 +169,6 @@ Future<void> _checkBirthdayReminders() async {
   try {
     final db = FirebaseFirestore.instance;
     final now = DateTime.now();
-
 
     final today = DateTime(now.year, now.month, now.day);
 

@@ -226,198 +226,426 @@ Terima kasih!''';
     final parsedDobForDisplay = _toDate(tanggalLahir);
     final tanggalLahirDisplay =
         parsedDobForDisplay != null
-            ? DateFormat('MM/dd/yyyy').format(parsedDobForDisplay)
+            ? DateFormat('dd/MM/yyyy').format(parsedDobForDisplay)
             : (tanggalLahir?.toString() ?? '-');
-    final customerId = data['ID'] ?? 'N/A'; // Ambil ID dari Firestore
+    final customerId = data['ID'] ?? 'N/A';
     final message = _generateMessage(name, tanggalLahir);
     final daysUntilBirthday = _getDaysUntilBirthday(tanggalLahir);
 
-    return Card(
+    final today = DateTime.now();
+    final dob = _toDate(data['Tanggal_Lahir']);
+    final birthDay = dob?.day ?? 1;
+    final birthMonth = dob?.month ?? 1;
+    final nextBirthday = DateTime(today.year, birthMonth, birthDay);
+
+    return Container(
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 3,
-      child: ExpansionTile(
-        leading: const Icon(Icons.event, color: Colors.red),
-        title: Text(
-          name,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        trailing: const Icon(Icons.keyboard_arrow_down),
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.red.shade400, Colors.red.shade600],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.red.withOpacity(0.3),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.person, color: Colors.white, size: 24),
+          ),
+          title: Text(
+            name,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: Colors.black87,
+            ),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.directions_car,
-                          size: 20,
-                          color: Colors.black54,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          "${data['Model'] ?? '-'}",
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      "${data['Tanggal_Spk_Do'] ?? '-'}",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black54,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(Icons.cake, size: 20, color: Colors.black54),
-                    const SizedBox(width: 6),
-                    Text(
-                      tanggalLahirDisplay,
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ],
-                ),
-                if ((data['Hobby'] ?? '').toString().trim().isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.sports_esports,
-                          size: 20,
-                          color: Colors.black54,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          "${data['Hobby']}",
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ],
-                    ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
                   ),
-                if ((data['Makanan_Favorit'] ?? '')
-                    .toString()
-                    .trim()
-                    .isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.fastfood,
-                          size: 20,
-                          color: Colors.black54,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          "${data['Makanan_Favorit']}",
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ],
-                    ),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    FloatingActionButton.small(
-                      heroTag: null,
-                      backgroundColor: Colors.grey.shade700,
-                      tooltip: 'Edit Pesan',
-                      onPressed: () {
-                        final today = DateTime.now();
-                        final dob = _toDate(data['Tanggal_Lahir']);
-                        final birthDay = dob?.day ?? 1;
-                        final birthMonth = dob?.month ?? 1;
-                        final nextBirthday = DateTime(
-                          today.year,
-                          birthMonth,
-                          birthDay,
-                        );
-                        final includeForm =
-                            nextBirthday.difference(today).inDays == 6;
-                        _editMessage(name, phone, message, customerId);
-                      },
-                      child: const Icon(
-                        Icons.edit,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    if (() {
-                      final today = DateTime.now();
-                      final dob = _toDate(data['Tanggal_Lahir']);
-                      final birthDay = dob?.day ?? 1;
-                      final birthMonth = dob?.month ?? 1;
-                      final nextBirthday = DateTime(
-                        today.year,
-                        birthMonth,
-                        birthDay,
-                      );
-                      return nextBirthday.difference(today).inDays == 6;
-                    }())
-                      FloatingActionButton.small(
-                        heroTag: null,
-                        backgroundColor: const Color.fromARGB(255, 255, 17, 0),
-                        tooltip: 'Kirim ke WhatsApp dengan Form',
-                        onPressed: () {
-                          _sendWhatsAppWithForm(
-                            name,
-                            customerId,
-                            phone,
-                            message,
-                          );
-                        },
-                        child: const Icon(
-                          FontAwesomeIcons.whatsapp,
-                          color: Colors.white,
-                          size: 22,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.cake, size: 14, color: Colors.red.shade600),
+                      const SizedBox(width: 4),
+                      Text(
+                        tanggalLahirDisplay,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.red.shade700,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    if (() {
-                      final today = DateTime.now();
-                      final dob = _toDate(data['Tanggal_Lahir']);
-                      final birthDay = dob?.day ?? 1;
-                      final birthMonth = dob?.month ?? 1;
-                      final nextBirthday = DateTime(
-                        today.year,
-                        birthMonth,
-                        birthDay,
-                      );
-                      return nextBirthday.difference(today).inDays != 6;
-                    }())
-                      FloatingActionButton.small(
-                        heroTag: null,
-                        backgroundColor: const Color.fromARGB(255, 255, 17, 0),
-                        tooltip: 'Kirim Pesan ke WhatsApp',
-                        onPressed: () {
-                          _openWhatsApp(phone, message);
-                        },
-                        child: const Icon(
-                          FontAwesomeIcons.whatsapp,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
-        ],
+          trailing: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(Icons.keyboard_arrow_down, color: Colors.grey.shade700),
+          ),
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.grey.shade50, Colors.white],
+                ),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header divider
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Model & Tanggal SPK
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.grey.shade200,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.directions_car,
+                                    size: 20,
+                                    color: Colors.blue.shade600,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Model",
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey.shade600,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        "${data['Model'] ?? '-'}",
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.calendar_today,
+                                  size: 14,
+                                  color: Colors.orange.shade700,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  "${data['Tanggal_Spk_Do'] ?? '-'}",
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.orange.shade700,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Hobby (if exists)
+                    if ((data['Hobby'] ?? '').toString().trim().isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey.shade200,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.purple.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.sports_esports,
+                                size: 20,
+                                color: Colors.purple.shade600,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Hobi",
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey.shade600,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    "${data['Hobby']}",
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    // Makanan Favorit (if exists)
+                    if ((data['Makanan_Favorit'] ?? '')
+                        .toString()
+                        .trim()
+                        .isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey.shade200,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.fastfood,
+                                size: 20,
+                                color: Colors.green.shade600,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Makanan Favorit",
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey.shade600,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    "${data['Makanan_Favorit']}",
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 16),
+
+                    // Action buttons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            final includeForm =
+                                nextBirthday.difference(today).inDays == 6;
+                            _editMessage(name, phone, message, customerId);
+                          },
+                          icon: const Icon(Icons.edit, size: 18),
+                          label: const Text('Edit'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey.shade700,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            elevation: 2,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        if (nextBirthday.difference(today).inDays == 6)
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              _sendWhatsAppWithForm(
+                                name,
+                                customerId,
+                                phone,
+                                message,
+                              );
+                            },
+                            icon: const Icon(
+                              FontAwesomeIcons.whatsapp,
+                              size: 18,
+                            ),
+                            label: const Text('Form'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF25D366),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              elevation: 2,
+                            ),
+                          )
+                        else
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              _openWhatsApp(phone, message);
+                            },
+                            icon: const Icon(
+                              FontAwesomeIcons.whatsapp,
+                              size: 18,
+                            ),
+                            label: const Text('WhatsApp'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF25D366),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              elevation: 2,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -427,58 +655,269 @@ Terima kasih!''';
     final monthNow = DateFormat('MMMM', 'id_ID').format(DateTime.now());
 
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
+            // Header Section with Gradient
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.red.shade600, Colors.red.shade800],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.red.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Cari berdasarkan $_filter...',
-                        prefixIcon: const Icon(Icons.search, color: Color.fromARGB(255, 255, 17, 0)),
-                        filled: true,
-                        fillColor: Colors.grey[200],
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
+                  // Search Bar
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: TextField(
+                            controller: _searchController,
+                            style: const TextStyle(fontSize: 14),
+                            decoration: InputDecoration(
+                              hintText: 'Cari berdasarkan $_filter...',
+                              hintStyle: TextStyle(
+                                color: Colors.grey.shade400,
+                                fontSize: 14,
+                              ),
+                              prefixIcon: Icon(
+                                Icons.search,
+                                color: Colors.red.shade600,
+                                size: 22,
+                              ),
+                              suffixIcon:
+                                  _searchText.isNotEmpty
+                                      ? IconButton(
+                                        icon: Icon(
+                                          Icons.clear,
+                                          color: Colors.grey.shade400,
+                                          size: 20,
+                                        ),
+                                        onPressed: () {
+                                          _searchController.clear();
+                                          setState(() => _searchText = '');
+                                        },
+                                      )
+                                      : null,
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Colors.red.shade300,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.filter_list, color: Color.fromARGB(255, 255, 17, 0)),
-                    onSelected: (val) {
-                      setState(() => _filter = val);
-                    },
-                    itemBuilder:
-                        (context) => const [
-                          PopupMenuItem(value: "nama", child: Text("Nama")),
-                          PopupMenuItem(
-                            value: "no_rangka",
-                            child: Text("Nomor Rangka"),
+                      const SizedBox(width: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: PopupMenuButton<String>(
+                          icon: Icon(
+                            Icons.filter_list,
+                            color: Colors.red.shade600,
                           ),
-                          PopupMenuItem(value: "model", child: Text("Model")),
-                        ],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          offset: const Offset(0, 45),
+                          onSelected: (val) {
+                            setState(() => _filter = val);
+                          },
+                          itemBuilder:
+                              (context) => [
+                                PopupMenuItem(
+                                  value: "nama",
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.person,
+                                        size: 20,
+                                        color:
+                                            _filter == "nama"
+                                                ? Colors.red.shade600
+                                                : Colors.grey.shade600,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        "Nama",
+                                        style: TextStyle(
+                                          color:
+                                              _filter == "nama"
+                                                  ? Colors.red.shade600
+                                                  : Colors.black87,
+                                          fontWeight:
+                                              _filter == "nama"
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: "no_rangka",
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.numbers,
+                                        size: 20,
+                                        color:
+                                            _filter == "no_rangka"
+                                                ? Colors.red.shade600
+                                                : Colors.grey.shade600,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        "Nomor Rangka",
+                                        style: TextStyle(
+                                          color:
+                                              _filter == "no_rangka"
+                                                  ? Colors.red.shade600
+                                                  : Colors.black87,
+                                          fontWeight:
+                                              _filter == "no_rangka"
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: "model",
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.directions_car,
+                                        size: 20,
+                                        color:
+                                            _filter == "model"
+                                                ? Colors.red.shade600
+                                                : Colors.grey.shade600,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        "Model",
+                                        style: TextStyle(
+                                          color:
+                                              _filter == "model"
+                                                  ? Colors.red.shade600
+                                                  : Colors.black87,
+                                          fontWeight:
+                                              _filter == "model"
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
+
+            // Content Section
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
                 stream: _getCustomerStream(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            color: Colors.red.shade600,
+                            strokeWidth: 3,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Memuat data...',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
                   }
 
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Center(
-                      child: Text("Tidak ada data pelanggan."),
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.search_off,
+                            size: 80,
+                            color: Colors.grey.shade300,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            "Tidak ada data pelanggan.",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
                     );
                   }
 
@@ -515,9 +954,6 @@ Terima kasih!''';
                         try {
                           final spkDo = data['Tanggal_Spk_Do'];
                           final dtSpk = _toDate(spkDo);
-                          print(
-                            'DEBUG: ${data['Customer_Name']} - Tanggal_Spk_Do: $spkDo -> Parsed: $dtSpk',
-                          );
                           if (dtSpk == null) return false;
                           return dtSpk.month == nearestMonth;
                         } catch (_) {
@@ -526,49 +962,155 @@ Terima kasih!''';
                       }).toList();
 
                   return ListView(
-                    padding: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.only(top: 16, bottom: 12),
                     children: [
                       if (_searchText.isNotEmpty) ...[
-                        const Padding(
-                          padding: EdgeInsets.symmetric(
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
                             horizontal: 16,
-                            vertical: 4,
+                            vertical: 8,
                           ),
-                          child: Text(
-                            "Hasil Pencarian",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.search,
+                                  color: Colors.blue.shade600,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      "Hasil Pencarian",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    Text(
+                                      "${searchResults.length} customer ditemukan",
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         if (searchResults.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.all(16.0),
+                          Padding(
+                            padding: const EdgeInsets.all(32.0),
                             child: Center(
-                              child: Text("Tidak ada hasil ditemukan."),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.search_off,
+                                    size: 60,
+                                    color: Colors.grey.shade300,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    "Tidak ada hasil ditemukan.",
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           )
                         else
                           ...searchResults
                               .map((data) => _buildCustomerCard(data))
                               .toList(),
+                        const SizedBox(height: 24),
                       ],
-                      const SizedBox(height: 12),
+
+                      // Nearest Date Section
                       Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
-                          vertical: 4,
+                          vertical: 8,
                         ),
-                        child: Text(
-                          "Nearest Date $monthNow",
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.calendar_month,
+                                color: Colors.orange.shade600,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Nearest Date $monthNow",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  Text(
+                                    "${nearestList.length} customer bulan ini",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      ...nearestList.map(_buildCustomerCard),
+                      if (nearestList.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.all(32.0),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.event_busy,
+                                  size: 60,
+                                  color: Colors.grey.shade300,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  "Tidak ada customer bulan ini.",
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        ...nearestList.map(_buildCustomerCard),
                     ],
                   );
                 },
