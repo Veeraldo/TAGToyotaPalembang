@@ -2,7 +2,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 class GoogleFormHelper {
   // TinyURL yang otomatis forward parameter
-  static const String formBaseUrl = 'https://tinyurl.com/TestingTAG';
+  static const String formBaseUrl = 'https://tinyurl.com/TunasAutoGraha';
   
   /// Generate URL dengan parameter
   static String generateFormUrl(String customerId, String customerName) {
