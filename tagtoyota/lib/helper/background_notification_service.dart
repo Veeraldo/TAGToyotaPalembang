@@ -74,7 +74,6 @@ class BackgroundNotificationService {
       print('Exact alarm permission granted: $exactAlarmGranted');
     }
 
-    // Request iOS permissions
     final iosImplementation =
         _notifications
             .resolvePlatformSpecificImplementation<
