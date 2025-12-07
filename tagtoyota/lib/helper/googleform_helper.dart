@@ -1,40 +1,22 @@
 import 'package:url_launcher/url_launcher.dart';
 
 class GoogleFormHelper {
-  // Form URL kamu
-  static const String formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfiAbdyoF0pXJmxgU2umUQrL3jphj8skKlWm5pEhAAHsZcmIQ/viewform';
+  // TinyURL yang otomatis forward parameter
+  static const String formBaseUrl = 'https://tinyurl.com/TestingTAG';
   
-  // Entry ID dari form kamu
-  static const String idFieldEntry = 'entry.1412436393';      // Field ID Customer
-  static const String nameFieldEntry = 'entry.1981046888';    // Field Nama Customer
-
-  /// Generate pre-filled Google Form URL
-  /// 
-  /// Parameter:
-  /// - customerId: ID customer (misal: 1234)
-  /// - customerName: Nama customer (misal: Jonathan)
-  /// 
-  /// Return: URL yang sudah di-prefill dengan ID dan Nama
+  /// Generate URL dengan parameter
   static String generateFormUrl(String customerId, String customerName) {
     final encodedId = Uri.encodeQueryComponent(customerId);
     final encodedName = Uri.encodeQueryComponent(customerName);
     
-    final url = '$formBaseUrl?$idFieldEntry=$encodedId&$nameFieldEntry=$encodedName';
+    // TinyURL akan otomatis forward parameter ke GitHub Pages
+    final url = '$formBaseUrl?customer_id=$encodedId&customer_name=$encodedName';
     
-    print('DEBUG - Generated Form URL: $url');
-    print('DEBUG - Customer ID: $customerId');
-    print('DEBUG - Customer Name: $customerName');
-    
+    print('DEBUG - Short URL: $url');
     return url;
   }
 
-  /// Kirim ke WhatsApp dengan link Google Form yang sudah di-prefill
-  /// 
-  /// Parameter:
-  /// - phoneNumber: Nomor WhatsApp (format: 62812345678, tanpa +)
-  /// - customerId: ID customer
-  /// - customerName: Nama customer
-  /// - additionalMessage: Pesan tambahan sebelum link form (optional)
+  /// Kirim form via WhatsApp
   static Future<void> sendFormToWhatsApp({
     required String phoneNumber,
     required String customerId,
@@ -43,16 +25,13 @@ class GoogleFormHelper {
   }) async {
     try {
       final formUrl = generateFormUrl(customerId, customerName);
-      
-      // Compose pesan dengan link form
+
       String message = '''Halo $customerName,
 
-$additionalMessage
-
-Silakan isi form berikut untuk melanjutkan:
+${additionalMessage.isNotEmpty ? '$additionalMessage\n\n' : ''}Silakan isi form preferensi Anda:
 $formUrl
 
-ID dan Nama kamu sudah terisi otomatis di form.
+ID dan Nama sudah terisi otomatis.
 
 Terima kasih!'''.trim();
 
@@ -60,16 +39,19 @@ Terima kasih!'''.trim();
       final whatsappUrl = 'https://wa.me/$phoneNumber?text=$encodedMessage';
 
       if (await canLaunchUrl(Uri.parse(whatsappUrl))) {
-        await launchUrl(Uri.parse(whatsappUrl), mode: LaunchMode.externalApplication);
+        await launchUrl(
+          Uri.parse(whatsappUrl),
+          mode: LaunchMode.externalApplication,
+        );
       } else {
-        throw 'WhatsApp tidak terinstall atau nomor tidak valid';
+        throw 'WhatsApp tidak terinstall';
       }
     } catch (e) {
       throw 'Error: $e';
     }
   }
 
-  /// Buka form langsung di browser (tanpa WhatsApp)
+  /// Buka form di browser
   static Future<void> openFormInBrowser({
     required String customerId,
     required String customerName,
@@ -78,7 +60,10 @@ Terima kasih!'''.trim();
       final formUrl = generateFormUrl(customerId, customerName);
       
       if (await canLaunchUrl(Uri.parse(formUrl))) {
-        await launchUrl(Uri.parse(formUrl), mode: LaunchMode.externalApplication);
+        await launchUrl(
+          Uri.parse(formUrl),
+          mode: LaunchMode.externalApplication,
+        );
       } else {
         throw 'Tidak bisa membuka URL';
       }
