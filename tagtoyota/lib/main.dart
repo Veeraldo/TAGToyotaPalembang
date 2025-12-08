@@ -12,7 +12,6 @@ Future<void> main() async {
   await FCMService.initialize();
 
  
-  // Initialize background service untuk notifikasi otomatis
   await BackgroundNotificationService.initialize();
   await BackgroundNotificationService.registerPeriodicTask();
   

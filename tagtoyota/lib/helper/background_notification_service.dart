@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:tagtoyota/helper/FCM_service.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -170,6 +171,8 @@ class BackgroundNotificationService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('daily_notifications_enabled', true);
       await registerPeriodicTask();
+      await FCMService.subscribeToTopic('birthday_reminders');
+      await FCMService.subscribeToTopic('daily_notifications');
       print('Daily notifications enabled');
       return true;
     } catch (e) {
@@ -184,6 +187,8 @@ class BackgroundNotificationService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('daily_notifications_enabled', false);
       await cancelAllTasks();
+      await FCMService.unsubscribeFromTopic('birthday_reminders');
+      await FCMService.unsubscribeFromTopic('daily_notifications');
       print('Daily notifications disabled');
       return true;
     } catch (e) {
