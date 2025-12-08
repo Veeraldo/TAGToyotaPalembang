@@ -58,9 +58,7 @@ class FCMService {
         ?.createNotificationChannel(androidChannel);
 
     _fcmToken = await _firebaseMessaging.getToken();
-    print('========================================');
     print('FCM Token: $_fcmToken');
-    print('========================================');
     
     if (_fcmToken != null) {
       final prefs = await SharedPreferences.getInstance();
@@ -87,7 +85,6 @@ class FCMService {
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       print('Message clicked: ${message.messageId}');
-      // Handle navigation here if needed
     });
 
     RemoteMessage? initialMessage = await _firebaseMessaging.getInitialMessage();
